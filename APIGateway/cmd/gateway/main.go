@@ -7,13 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	
+    
 	"google.golang.org/grpc"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/KaminurOrynbek/BiznesAsh/handler"
 	contentpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/content"
+	"github.com/KaminurOrynbek/BiznesAsh/APIGateway/internal/middleware"
 	// notificationpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/notification"
 	// userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
 )
@@ -56,6 +57,9 @@ func main() {
 	// notificationClient := notificationpb.NewNotificationServiceClient(notificationConn)
 
 	router := gin.Default()
+
+	// Use dedicated CORS middleware
+	router.Use(middleware.CORSMiddleware())
 
 	// handler.RegisterUserRoutes(router, userClient)
 	handler.RegisterContentRoutes(router, contentClient)
