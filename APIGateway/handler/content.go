@@ -15,7 +15,7 @@ import (
 func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) {
 	content := r.Group("/content")
 
-	createPost := createPostHandler(contentClient)
+	createPost := createPostHandler(contentClient, userClient)
 	r.POST("/posts", createPost)       // frontend may call this (e.g. cached or env)
 	content.POST("/posts", createPost) // canonical path
 
@@ -56,22 +56,50 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 	content.POST("/posts/:id/unlike", dislikePostHandler(contentClient, userClient))
 }
 
-func createPostHandler(client contentpb.ContentServiceClient) gin.HandlerFunc {
+// func createPostHandler(client contentpb.ContentServiceClient) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		var req contentpb.CreatePostRequest
+// 		if err := c.BindJSON(&req); err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 			return
+// 		}
+// 		resp, err := client.CreatePost(context.Background(), &req)
+// 		if err != nil {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 			return
+// 		}
+// 		// Return the post object directly so frontend gets { id, content, ... } not { post: { ... } }
+// 		c.JSON(http.StatusOK, resp.GetPost())
+// 	}
+// }
+
+func createPostHandler(client contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req contentpb.CreatePostRequest
-		if err := c.BindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		resp, err := client.CreatePost(context.Background(), &req)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		// Return the post object directly so frontend gets { id, content, ... } not { post: { ... } }
-		c.JSON(http.StatusOK, resp.GetPost())
+	  var req contentpb.CreatePostRequest
+	  if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	  }
+  
+	  // get current user id from token
+	  userID := getCurrentUserID(c, userClient)
+	  if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+		return
+	  }
+  
+	  req.AuthorId = userID
+  
+	  resp, err := client.CreatePost(context.Background(), &req)
+	  if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	  }
+  
+	  c.JSON(http.StatusOK, resp.GetPost())
 	}
-}
+  }
+  
 
 // getCurrentUserID returns the current user's ID from the Authorization header, or empty string if missing/invalid.
 func getCurrentUserID(c *gin.Context, userClient userpb.UserServiceClient) string {

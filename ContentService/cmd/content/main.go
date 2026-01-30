@@ -30,8 +30,10 @@ import (
 )
 
 func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found or failed to load")
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println(".env file not found in current dir, continuing...")
 	} else {
 		log.Println("env file loaded successfully")
 	}
@@ -46,9 +48,33 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to Postgres: %v", err)
 	}
+
+	
 	defer db.Close()
 
+	cwd, _ := os.Getwd()
+	log.Printf("CWD=%s\n", cwd)
+
+
 	log.Println("Successfully connected to Postgres!")
+
+	// DEBUG: check which DB + schema the service actually uses
+	var dbName string
+	var searchPath string
+	var regclass *string
+
+
+	if err := db.Get(&dbName, "select current_database()"); err != nil {
+	log.Fatalf("failed to read current_database: %v", err)
+	}
+	if err := db.Get(&searchPath, "show search_path"); err != nil {
+	log.Fatalf("failed to read search_path: %v", err)
+	}
+
+	if err := db.Get(&regclass, "select to_regclass('public.posts')"); err != nil {
+		log.Fatalf("failed to read to_regclass: %v", err)
+	}
+	log.Printf("Connected DB: %s | search_path: %s | public.posts: %v\n", dbName, searchPath, regclass)
 
 	// 3. Init Redis
 	redisConfig := rediscfg.LoadRedisConfig()
@@ -101,7 +127,9 @@ func main() {
 	s := grpc.NewServer()
 	pb.RegisterContentServiceServer(s, contentHandler)
 
-	log.Println("gRPC server is running on :50055")
+	log.Printf("ENV GRPC_PORT=%q\n", os.Getenv("GRPC_PORT"))
+
+
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}

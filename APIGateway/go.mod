@@ -6,7 +6,6 @@ require (
 	github.com/KaminurOrynbek/BiznesAsh_lib v0.0.0-20250522164016-b6c6e06502fc
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1
-	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.22.0
 	google.golang.org/grpc v1.72.1
