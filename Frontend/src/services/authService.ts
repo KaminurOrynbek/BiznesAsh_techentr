@@ -1,11 +1,11 @@
-import apiClient from './api';
+import apiClient from "./api";
 
 export interface User {
   id: string;
   username: string;
   email: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthCredentials {
@@ -15,37 +15,29 @@ export interface AuthCredentials {
 
 export interface AuthResponse {
   token: string;
-  user: User;
+  userId: string;
 }
 
 export const authService = {
   login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
-    return response.data;
+    const res = await apiClient.post<AuthResponse>("/auth/login", credentials);
+    localStorage.setItem("token", res.data.token);
+    return res.data;
   },
 
-  register: async (userData: { username: string; email: string; password: string }): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/register', userData);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
-    return response.data;
+  register: async (data: { username: string; email: string; password: string }): Promise<AuthResponse> => {
+    const res = await apiClient.post<AuthResponse>("/auth/register", data);
+    localStorage.setItem("token", res.data.token);
+    return res.data;
   },
 
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
   },
 
+  // пока не используем /auth/me, чтобы не ломать редирект
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get<User>('/users/me');
-    return response.data;
-  },
-
-  updateProfile: async (userId: string, updates: Partial<User>): Promise<User> => {
-    const response = await apiClient.put<User>(`/users/${userId}`, updates);
-    return response.data;
+    const res = await apiClient.get<User>("/auth/me");
+    return res.data;
   },
 };
