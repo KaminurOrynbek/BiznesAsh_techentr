@@ -1,10 +1,11 @@
 package main
 
 import (
-	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"os"
+
+	"google.golang.org/grpc/reflection"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -24,6 +25,9 @@ import (
 )
 
 func main() {
+
+	_ = godotenv.Load(".env")
+	
 	// Try to load .env file, but don't fail if it doesn't exist
 	if err := godotenv.Load(); err != nil {
 		// Only log if it's not a "file not found" error
@@ -35,11 +39,14 @@ func main() {
 	// Init Postgres
 	pgConfig := postgresCfg.LoadPostgresConfig()
 	db, err := sqlx.Connect("postgres", pgConfig.DSN())
+
 	if err != nil {
 		log.Fatalf("Failed to connect to Postgres: %v", err)
 	}
 	defer db.Close()
 	log.Println("Successfully connected to Postgres!")
+
+	
 
 	// Init user repo
 	userRepo := dao.NewUserDAO(db)
