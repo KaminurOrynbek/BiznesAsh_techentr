@@ -2,15 +2,62 @@ package handler
 
 import (
 	"context"
-	contentpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/content"
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
+	"strings"
+
+	contentpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/content"
+	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
+	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc/metadata"
 )
 
-func RegisterContentRoutes(r *gin.Engine, client contentpb.ContentServiceClient) {
+func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) {
 	content := r.Group("/content")
 
-	content.POST("/posts", func(c *gin.Context) {
+	createPost := createPostHandler(contentClient)
+	r.POST("/posts", createPost)       // frontend may call this (e.g. cached or env)
+	content.POST("/posts", createPost) // canonical path
+
+	// GET /content/posts - list posts (feed). Query: skip (default 0), limit (default 20)
+	content.GET("/posts", func(c *gin.Context) {
+		skip, _ := parseIntDefault(c.Query("skip"), 0)
+		limit, _ := parseIntDefault(c.Query("limit"), 20)
+		if limit <= 0 {
+			limit = 20
+		}
+		if limit > 100 {
+			limit = 100
+		}
+		page := skip/limit + 1
+		resp, err := contentClient.ListPosts(context.Background(), &contentpb.ListPostsRequest{
+			Page:  int32(page),
+			Limit: int32(limit),
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Return posts array so frontend gets [ { id, content, ... }, ... ]
+		c.JSON(http.StatusOK, resp.GetPosts())
+	})
+
+	content.GET("/posts/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		resp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp.GetPost())
+	})
+
+	content.POST("/posts/:id/like", likePostHandler(contentClient, userClient))
+	content.POST("/posts/:id/unlike", dislikePostHandler(contentClient, userClient))
+}
+
+func createPostHandler(client contentpb.ContentServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		var req contentpb.CreatePostRequest
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -21,16 +68,91 @@ func RegisterContentRoutes(r *gin.Engine, client contentpb.ContentServiceClient)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, resp)
-	})
+		// Return the post object directly so frontend gets { id, content, ... } not { post: { ... } }
+		c.JSON(http.StatusOK, resp.GetPost())
+	}
+}
 
-	content.GET("/posts/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		resp, err := client.GetPost(context.Background(), &contentpb.PostIdRequest{Id: id})
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+// getCurrentUserID returns the current user's ID from the Authorization header, or empty string if missing/invalid.
+func getCurrentUserID(c *gin.Context, userClient userpb.UserServiceClient) string {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		return ""
+	}
+	ctx := metadata.NewOutgoingContext(c.Request.Context(), metadata.Pairs("authorization", authHeader))
+	resp, err := userClient.GetCurrentUser(ctx, &userpb.Empty{})
+	if err != nil {
+		return ""
+	}
+	return resp.GetUserId()
+}
+
+func likePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		if postID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "post id required"})
 			return
 		}
-		c.JSON(http.StatusOK, resp)
-	})
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required to like a post"})
+			return
+		}
+		_, err := contentClient.LikePost(context.Background(), &contentpb.LikePostRequest{
+			PostId: postID,
+			UserId: userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Return updated post so frontend can replace list item
+		postResp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: postID})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"likesCount": 0})
+			return
+		}
+		c.JSON(http.StatusOK, postResp.GetPost())
+	}
+}
+
+func dislikePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		if postID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "post id required"})
+			return
+		}
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required to unlike a post"})
+			return
+		}
+		_, err := contentClient.DislikePost(context.Background(), &contentpb.DislikePostRequest{
+			PostId: postID,
+			UserId: userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		postResp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: postID})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"dislikesCount": 0})
+			return
+		}
+		c.JSON(http.StatusOK, postResp.GetPost())
+	}
+}
+
+func parseIntDefault(s string, defaultVal int) (int, bool) {
+	if s == "" {
+		return defaultVal, false
+	}
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return defaultVal, false
+	}
+	return n, true
 }
