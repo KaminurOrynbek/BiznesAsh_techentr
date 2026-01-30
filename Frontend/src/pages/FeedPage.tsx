@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Navbar, Card, Loading, Alert, Button, TextArea } from '../components';
 import type { Post } from '../services/contentService';
 import { contentService } from '../services/contentService';
-import { useAuth } from '../context/AuthContext';
 
 export const FeedPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -53,7 +52,7 @@ export const FeedPage = () => {
     try {
       const updatedPost = await contentService.likePost(postId);
       setPosts(posts.map((p) => (p.id === postId ? updatedPost : p)));
-    } catch (err) {
+    } catch {
       setError('Failed to like post');
     }
   };
