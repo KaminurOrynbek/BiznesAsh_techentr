@@ -1,58 +1,67 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Navbar, Card, Loading, Alert, Button, Input } from '../components';
-import type { User } from '../services/authService';
-import { authService } from '../services/authService';
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { Navbar, Card, Loading, Alert, Button, Input } from "../components";
+import type { User } from "../services/authService";
+import { authService } from "../services/authService";
 
 export const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
+
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-    }
+    if (userId) fetchUserProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchUserProfile = async () => {
     if (!userId) return;
     setIsLoading(true);
+    setError("");
+
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
-      setUsername(userData.username);
-      setEmail(userData.email);
+      setUsername(userData.username ?? "");
+      setEmail(userData.email ?? "");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load profile'
-      );
+      setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
+  const memberSince = (() => {
+    const raw = user?.createdAt;
+    if (!raw) return "—";
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+  })();
+
+  const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
 
     setIsSaving(true);
+    setError("");
+
     try {
       const updatedUser = await authService.updateProfile(user.id, {
         username,
         email,
       });
+
       setUser(updatedUser);
       setIsEditing(false);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to update profile'
-      );
+      setError(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setIsSaving(false);
     }
@@ -62,19 +71,17 @@ export const ProfilePage = () => {
     <>
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        {error && <Alert type="error" message={error} onClose={() => setError('')} />}
+        {error && <Alert type="error" message={error} onClose={() => setError("")} />}
 
         {isLoading ? (
           <Loading />
         ) : user ? (
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold">{user.username}</h1>
+              <h1 className="text-3xl font-bold text-[#3E6C99]">{user.username}</h1>
+
               {!isEditing && (
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsEditing(true)}
-                >
+                <Button variant="secondary" onClick={() => setIsEditing(true)}>
                   Edit Profile
                 </Button>
               )}
@@ -85,7 +92,7 @@ export const ProfilePage = () => {
                 <Input
                   label="Username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                   disabled={isSaving}
                 />
 
@@ -93,17 +100,15 @@ export const ProfilePage = () => {
                   label="Email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   disabled={isSaving}
                 />
 
                 <div className="flex space-x-4">
-                  <Button
-                    type="submit"
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save Changes"}
                   </Button>
+
                   <Button
                     type="button"
                     variant="secondary"
@@ -118,13 +123,12 @@ export const ProfilePage = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-gray-600 text-sm">Email</label>
-                  <p className="text-gray-800">{user.email}</p>
+                  <p className="text-gray-800">{user.email ?? "—"}</p>
                 </div>
+
                 <div>
                   <label className="text-gray-600 text-sm">Member Since</label>
-                  <p className="text-gray-800">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </p>
+                  <p className="text-gray-800">{memberSince}</p>
                 </div>
               </div>
             )}

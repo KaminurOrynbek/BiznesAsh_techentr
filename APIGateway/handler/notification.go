@@ -9,6 +9,7 @@ import (
 )
 
 func RegisterNotificationRoutes(r *gin.Engine, client notificationpb.NotificationServiceClient) {
+	// existing routes
 	notify := r.Group("/notify")
 
 	notify.POST("/welcome", func(c *gin.Context) {
@@ -37,5 +38,12 @@ func RegisterNotificationRoutes(r *gin.Engine, client notificationpb.Notificatio
 			return
 		}
 		c.JSON(http.StatusOK, resp)
+	})
+
+	// TEMP: make frontend /notifications stop failing (no 404)
+	n := r.Group("/notifications")
+	n.GET("", func(c *gin.Context) {
+		// unreadOnly := c.Query("unreadOnly") // you can read it, but you can't use it yet
+		c.JSON(http.StatusOK, []any{})
 	})
 }

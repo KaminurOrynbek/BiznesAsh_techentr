@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
 
-import { ProtectedRoute } from './components';
+import { ProtectedRoute } from "./components";
 import {
   HomePage,
   LoginPage,
@@ -9,8 +9,9 @@ import {
   FeedPage,
   PostDetailPage,
   NotificationsPage,
+  HandbookPage,
   ProfilePage,
-} from './pages';
+} from "./pages";
 
 function App() {
   return (
@@ -20,7 +21,11 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          
+
+          {/* Public (or make protected if you want) */}
+          <Route path="/handbook" element={<HandbookPage />} />
+
+          {/* Protected */}
           <Route
             path="/feed"
             element={
@@ -29,7 +34,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           <Route
             path="/post/:postId"
             element={
@@ -38,7 +43,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           <Route
             path="/notifications"
             element={
@@ -47,7 +52,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
+          {/* If your Profile page is not user-specific, change to "/profile" */}
           <Route
             path="/profile/:userId"
             element={
@@ -56,7 +62,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
