@@ -28,6 +28,7 @@ export const Navbar = () => {
             <>
               <div className="hidden md:flex items-center gap-6">
                 <NavLink to="/feed" className={itemClass}>Community</NavLink>
+                <NavLink to="/handbook" className={itemClass}>Handbook</NavLink>
                 <NavLink to="/notifications" className={itemClass}>Notifications</NavLink>
               </div>
 
@@ -38,6 +39,14 @@ export const Navbar = () => {
                   {(user?.username?.charAt(0) || "U").toUpperCase()}
                 </div>
               </Link>
+
+              <>
+                <NavLink to="/handbook" className={itemClass}>Handbook</NavLink>
+                  <Link to="/login" className="btn-primary py-2 px-6 text-sm">
+                    Sign In
+                  </Link>
+              </>
+
 
               <button
                 onClick={logout}

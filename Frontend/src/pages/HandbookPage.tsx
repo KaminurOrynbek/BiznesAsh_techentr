@@ -1,4 +1,7 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+
+
 import {
   Book,
   FileText,
@@ -341,9 +344,11 @@ export const HandbookPage = () => {
                   <div className="text-sm text-slate-600">
                     Next: keep going chapter by chapter and ask questions in Community.
                   </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2">
-                    Open Community
-                  </Button>
+                  <Link to="/feed">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2">
+                      Open Community
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

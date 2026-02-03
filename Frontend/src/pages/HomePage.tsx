@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { Navbar, Button, Card } from "../components";
+import { Navbar } from "../components";
 
 import {
   ArrowRight,
@@ -11,6 +11,40 @@ import {
   Lightbulb,
   TrendingUp,
 } from "lucide-react";
+
+// shadcn/ui
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+
+const howItWorksSteps = [
+  {
+    icon: FileText,
+    title: "1. Choose Format",
+    desc: "Decide between IE (Individual Entrepreneur) or LLP based on your needs.",
+  },
+  {
+    icon: CheckCircle,
+    title: "2. Register",
+    desc: "Follow guided registration steps with clear instructions.",
+  },
+  {
+    icon: Shield,
+    title: "3. Compliance",
+    desc: "Understand taxes, basic compliance, and reporting requirements.",
+  },
+  {
+    icon: Users,
+    title: "4. Connect",
+    desc: "Join the community to ask questions and grow your network.",
+  },
+];
+
+const audienceCards = [
+  { title: "First-time Entrepreneurs", icon: Lightbulb },
+  { title: "Students & Young Founders", icon: TrendingUp },
+  { title: "Small Business Owners", icon: Users },
+  { title: "Digital-First Founders", icon: FileText },
+];
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
@@ -28,6 +62,7 @@ export const HomePage = () => {
               src="https://images.unsplash.com/photo-1683334087142-3036da3628dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920"
               alt="Modern office"
               className="w-full h-full object-cover opacity-10"
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-white via-white/80 to-slate-50" />
           </div>
@@ -52,25 +87,41 @@ export const HomePage = () => {
               {!isAuthenticated ? (
                 <>
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base">
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base"
+                    >
                       Start your journey
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
 
+                  {/* If you want handbook later, change /login -> /handbook */}
                   <Link to="/login" className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-transparent border border-slate-300 text-slate-900 hover:bg-slate-50 px-8 h-12 text-base">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto h-12 text-base border-slate-300 hover:bg-slate-50"
+                    >
                       Explore the guide
                     </Button>
                   </Link>
                 </>
               ) : (
-                <Link to="/feed" className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base">
-                    Go to Community
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                <>
+                  <Link to="/feed" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base">
+                      Go to Community
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+              
+                  <Link to="/handbook" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto bg-transparent border border-slate-300 text-slate-900 hover:bg-slate-50 px-8 h-12 text-base">
+                      Explore the guide
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -89,28 +140,7 @@ export const HomePage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              {[
-                {
-                  icon: FileText,
-                  title: "1. Choose Format",
-                  desc: "Decide between IE (Individual Entrepreneur) or LLP based on your needs.",
-                },
-                {
-                  icon: CheckCircle,
-                  title: "2. Register",
-                  desc: "Follow guided registration steps with clear instructions.",
-                },
-                {
-                  icon: Shield,
-                  title: "3. Compliance",
-                  desc: "Understand taxes, basic compliance, and reporting requirements.",
-                },
-                {
-                  icon: Users,
-                  title: "4. Connect",
-                  desc: "Join the community to ask questions and grow your network.",
-                },
-              ].map((step, i) => (
+              {howItWorksSteps.map((step, i) => (
                 <div
                   key={i}
                   className="relative flex flex-col items-center text-center p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-lg transition-shadow"
@@ -137,6 +167,7 @@ export const HomePage = () => {
                   src="https://images.unsplash.com/photo-1661257454984-260701259b64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200"
                   alt="Entrepreneur working"
                   className="w-full h-auto"
+                  loading="lazy"
                 />
               </div>
 
@@ -180,22 +211,17 @@ export const HomePage = () => {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { title: "First-time Entrepreneurs", icon: Lightbulb },
-                { title: "Students & Young Founders", icon: TrendingUp },
-                { title: "Small Business Owners", icon: Users },
-                { title: "Digital-First Founders", icon: FileText },
-              ].map((audience, i) => (
+              {audienceCards.map((audience, i) => (
                 <Card
                   key={i}
-                  className="border-none shadow-md hover:shadow-lg transition-all bg-slate-50 p-0"
+                  className="border-none shadow-md hover:shadow-lg transition-all bg-slate-50"
                 >
-                  <div className="flex flex-col items-center justify-center p-8">
+                  <CardContent className="flex flex-col items-center justify-center p-8">
                     <audience.icon className="h-10 w-10 text-blue-600 mb-4" />
                     <h3 className="font-semibold text-lg text-slate-900">
                       {audience.title}
                     </h3>
-                  </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
