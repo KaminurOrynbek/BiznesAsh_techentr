@@ -11,7 +11,7 @@ import {
   type PanelResizeHandleProps,
 } from "react-resizable-panels";
 
-import { cn } from "./utils";
+import { cn } from "../../lib/utils";
 
 function ResizablePanelGroup({ className, ...props }: PanelGroupProps) {
   return (
