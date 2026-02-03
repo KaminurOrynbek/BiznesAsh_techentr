@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Navbar } from "../components";
+import logo from "../assets/logo.jpeg";
 
 import {
   ArrowRight,
@@ -163,12 +164,22 @@ export const HomePage = () => {
           <div className="container-page">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white">
-                <img
+                {/* <img
                   src="https://images.unsplash.com/photo-1661257454984-260701259b64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200"
                   alt="Entrepreneur working"
                   className="w-full h-auto"
                   loading="lazy"
-                />
+                /> */}
+                
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white flex items-center justify-center min-h-[420px]">
+                  <img
+                    src={logo}
+                    alt="BiznesAsh logo"
+                    className="max-h-[320px] w-auto object-contain"
+                    loading="lazy"
+                  />
+                </div>
+
               </div>
 
               <div>

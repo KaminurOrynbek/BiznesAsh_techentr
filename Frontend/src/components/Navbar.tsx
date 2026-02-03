@@ -27,26 +27,28 @@ export const Navbar = () => {
           {isAuthenticated ? (
             <>
               <div className="hidden md:flex items-center gap-6">
-                <NavLink to="/feed" className={itemClass}>Community</NavLink>
-                <NavLink to="/handbook" className={itemClass}>Handbook</NavLink>
-                <NavLink to="/notifications" className={itemClass}>Notifications</NavLink>
+                <NavLink to="/feed" className={itemClass}>
+                  Community
+                </NavLink>
+                <NavLink to="/handbook" className={itemClass}>
+                  Handbook
+                </NavLink>
+                <NavLink to="/notifications" className={itemClass}>
+                  Notifications
+                </NavLink>
               </div>
 
               <div className="h-6 w-[1px] bg-slate-200 mx-2 hidden md:block" />
 
-              <Link to={`/profile/${user?.id}`} className="flex items-center gap-2 group">
+              <Link
+                to={`/profile/${user?.id}`}
+                className="flex items-center gap-2 group"
+                title="Profile"
+              >
                 <div className="w-9 h-9 rounded-full bg-brand-50 flex items-center justify-center text-brand-700 text-xs font-bold border border-brand-100">
                   {(user?.username?.charAt(0) || "U").toUpperCase()}
                 </div>
               </Link>
-
-              <>
-                <NavLink to="/handbook" className={itemClass}>Handbook</NavLink>
-                  <Link to="/login" className="btn-primary py-2 px-6 text-sm">
-                    Sign In
-                  </Link>
-              </>
-
 
               <button
                 onClick={logout}
