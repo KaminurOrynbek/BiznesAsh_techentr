@@ -1,6 +1,17 @@
 {
     "css.lint.unknownAtRules": "ignore",
     "scss.lint.unknownAtRules": "ignore",
-    "less.lint.unknownAtRules": "ignore"
-  }
+    "less.lint.unknownAtRules": "ignore",
+
+    "cSpell.words": [
+      "Almas",
+      "cmdk",
+      "Embla",
+      "Kaspi",
+      "notif",
+      "nums",
+      "usecase",
+      "vaul"
+    ]
+}
   
