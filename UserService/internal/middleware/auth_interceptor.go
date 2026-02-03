@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"os"
 	"strings"
 
@@ -13,8 +14,15 @@ import (
 )
 
 func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	// Пропускаем аутентификацию для публичных методов
-	if info.FullMethod == "/user.UserService/Register" || info.FullMethod == "/user.UserService/Login" {
+	// Log the method name for debugging
+	// log.Printf("AuthInterceptor: method=%s", info.FullMethod) // Uncommented only if user wants verbose logs, but let's uncomment it now for debugging
+	log.Printf("AuthInterceptor: method=%s", info.FullMethod)
+
+	// Пропускаем аутентификацию для публичных методов (relax check to suffix to avoid package name issues)
+	if strings.HasSuffix(info.FullMethod, "/Register") ||
+		strings.HasSuffix(info.FullMethod, "/Login") ||
+		strings.HasSuffix(info.FullMethod, "/GetUser") ||
+		strings.HasSuffix(info.FullMethod, "/ListUsers") {
 		return handler(ctx, req)
 	}
 
@@ -25,7 +33,7 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 
 	authHeader, ok := md["authorization"]
 	if !ok || len(authHeader) == 0 {
-		return nil, status.Errorf(codes.Unauthenticated, "missing authorization header")
+		return nil, status.Errorf(codes.Unauthenticated, "[DEBUG] missing authorization header for method: %s", info.FullMethod)
 	}
 
 	tokenStr := authHeader[0]

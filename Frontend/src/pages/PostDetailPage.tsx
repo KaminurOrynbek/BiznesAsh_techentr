@@ -77,11 +77,25 @@ export const PostDetailPage = () => {
         ) : post ? (
           <>
             <Card className="mb-8">
-              <p className="text-gray-800 mb-4">{post.content}</p>
-              <div className="flex items-center space-x-4 text-gray-600 text-sm">
-                <span>👍 {post.likesCount} Likes</span>
-                <span>💬 {post.commentsCount} Comments</span>
-                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold text-sm">
+                  {(post.authorUsername?.[0] ?? "U").toUpperCase()}
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">
+                    {post.authorUsername || `User ${post.authorId.substring(0, 5)}`}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : "Just now"}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-gray-800 mb-6 whitespace-pre-wrap">{post.content}</p>
+
+              <div className="flex items-center space-x-6 text-gray-500 text-sm border-t border-slate-100 pt-4">
+                <span className="flex items-center gap-1">👍 {post.likesCount} Likes</span>
+                <span className="flex items-center gap-1">💬 {post.commentsCount} Comments</span>
               </div>
             </Card>
 
@@ -113,12 +127,21 @@ export const PostDetailPage = () => {
               ) : (
                 comments.map((comment) => (
                   <Card key={comment.id}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-6 w-6 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold text-[10px]">
+                        {(comment.authorUsername?.[0] ?? "U").toUpperCase()}
+                      </div>
+                      <span className="font-bold text-sm text-slate-900">
+                        {comment.authorUsername || `User ${comment.authorId.substring(0, 5)}`}
+                      </span>
+                    </div>
+
                     <p className="text-gray-800 mb-2">{comment.content}</p>
 
-                    <div className="flex items-center justify-between text-gray-600 text-sm">
-                      <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+                    <div className="flex items-center justify-between text-gray-400 text-xs">
+                      <span>{comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : "Just now"}</span>
 
-                      <Button variant="danger" size="sm" onClick={() => handleDeleteComment(comment.id)}>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteComment(comment.id)} className="h-7 py-0 px-2 text-[10px]">
                         Delete
                       </Button>
                     </div>

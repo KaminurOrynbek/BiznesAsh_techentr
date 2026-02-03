@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,7 +40,24 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 			return
 		}
 		// Return posts array so frontend gets [ { id, content, ... }, ... ]
-		c.JSON(http.StatusOK, resp.GetPosts())
+		posts := resp.GetPosts()
+		authorMap := fetchUsernames(posts, nil, userClient)
+
+		// Map to a structure including author name
+		var enriched []gin.H
+		for _, p := range posts {
+			enriched = append(enriched, gin.H{
+				"id":             p.GetId(),
+				"content":        p.GetContent(),
+				"authorId":       p.GetAuthorId(),
+				"authorUsername": authorMap[p.GetAuthorId()],
+				"likesCount":     p.GetLikesCount(),
+				"commentsCount":  p.GetCommentsCount(),
+				"createdAt":      p.GetCreatedAt(),
+				"updatedAt":      p.GetUpdatedAt(),
+			})
+		}
+		c.JSON(http.StatusOK, enriched)
 	})
 
 	content.GET("/posts/:id", func(c *gin.Context) {
@@ -49,11 +67,30 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, resp.GetPost())
+		p := resp.GetPost()
+		u, err := userClient.GetUser(context.Background(), &userpb.GetUserRequest{UserId: p.GetAuthorId()})
+		if err != nil {
+			log.Printf("Error fetching user %s: %v", p.GetAuthorId(), err)
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"id":             p.GetId(),
+			"content":        p.GetContent(),
+			"authorId":       p.GetAuthorId(),
+			"authorUsername": u.GetUsername(),
+			"likesCount":     p.GetLikesCount(),
+			"commentsCount":  p.GetCommentsCount(),
+			"createdAt":      p.GetCreatedAt(),
+			"updatedAt":      p.GetUpdatedAt(),
+		})
 	})
 
 	content.POST("/posts/:id/like", likePostHandler(contentClient, userClient))
 	content.POST("/posts/:id/unlike", dislikePostHandler(contentClient, userClient))
+
+	// Comment routes
+	content.POST("/posts/:id/comments", createCommentHandler(contentClient, userClient))
+	content.GET("/posts/:id/comments", listCommentsHandler(contentClient, userClient))
+	content.DELETE("/comments/:id", deleteCommentHandler(contentClient, userClient))
 }
 
 // func createPostHandler(client contentpb.ContentServiceClient) gin.HandlerFunc {
@@ -96,7 +133,15 @@ func createPostHandler(client contentpb.ContentServiceClient, userClient userpb.
 		return
 	  }
   
-	  c.JSON(http.StatusOK, resp.GetPost())
+	  p := resp.GetPost()
+	  u, _ := userClient.GetUser(context.Background(), &userpb.GetUserRequest{UserId: p.GetAuthorId()})
+	  c.JSON(http.StatusOK, gin.H{
+		"id":             p.GetId(),
+		"content":        p.GetContent(),
+		"authorId":       p.GetAuthorId(),
+		"authorUsername": u.GetUsername(),
+		"createdAt":      p.GetCreatedAt(),
+	  })
 	}
   }
   
@@ -172,6 +217,112 @@ func dislikePostHandler(contentClient contentpb.ContentServiceClient, userClient
 		}
 		c.JSON(http.StatusOK, postResp.GetPost())
 	}
+}
+
+func deleteCommentHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		commentID := c.Param("id")
+		if commentID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "comment id required"})
+			return
+		}
+
+		// Optional: verify authorship before deleting if backend doesn't handle it
+		// For now we pass to backend
+		_, err := contentClient.DeleteComment(context.Background(), &contentpb.CommentIdRequest{Id: commentID})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "comment deleted"})
+	}
+}
+
+func createCommentHandler(client contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		var req contentpb.CreateCommentRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+
+		req.PostId = postID
+		req.AuthorId = userID
+
+		resp, err := client.CreateComment(context.Background(), &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp.GetComment())
+	}
+}
+
+func listCommentsHandler(client contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		resp, err := client.ListComments(context.Background(), &contentpb.ListCommentsRequest{PostId: postID})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		comments := resp.GetComments()
+		authorMap := fetchUsernames(nil, comments, userClient)
+
+		var enriched []gin.H
+		for _, com := range comments {
+			enriched = append(enriched, gin.H{
+				"id":             com.GetId(),
+				"postId":         com.GetPostId(),
+				"authorId":       com.GetAuthorId(),
+				"authorUsername": authorMap[com.GetAuthorId()],
+				"content":        com.GetContent(),
+				"createdAt":      com.GetCreatedAt(),
+				"updatedAt":      com.GetUpdatedAt(),
+			})
+		}
+
+		c.JSON(http.StatusOK, enriched)
+	}
+}
+
+func fetchUsernames(posts []*contentpb.Post, comments []*contentpb.Comment, userClient userpb.UserServiceClient) map[string]string {
+	authorIDs := make(map[string]bool)
+	for _, p := range posts {
+		authorIDs[p.GetAuthorId()] = true
+	}
+	for _, c := range comments {
+		authorIDs[c.GetAuthorId()] = true
+	}
+
+	res := make(map[string]string)
+	for id := range authorIDs {
+		u, err := userClient.GetUser(context.Background(), &userpb.GetUserRequest{UserId: id})
+		if err == nil {
+			displayName := u.GetUsername()
+			if displayName == "" {
+				displayName = "User " + id[:5] // fallback for missing username
+			}
+			res[id] = displayName
+		} else {
+			fallback := id
+			if len(id) > 5 {
+				fallback = id[:5]
+			}
+			res[id] = "User " + fallback
+		}
+	}
+	return res
 }
 
 func parseIntDefault(s string, defaultVal int) (int, bool) {

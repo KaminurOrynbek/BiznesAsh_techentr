@@ -1,104 +1,69 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { MessageSquare, ThumbsUp, Share2, MoreHorizontal, Send, Sparkles } from "lucide-react";
 
-import { Card, Button, TextArea, Navbar } from "../components";
-
-// --- Types
-type Post = {
-  id: number;
-  author: string;
-  role: string;
-  avatar: string; // initials
-  time: string;
-  content: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-};
-
-// --- Mock Data (replace with API later)
-const INITIAL_POSTS: Post[] = [
-  {
-    id: 1,
-    author: "Almas K.",
-    role: "Aspiring Founder",
-    avatar: "AK",
-    time: "2 hours ago",
-    content:
-      "Just registered my IE (Individual Entrepreneur) today via eGov! The process was surprisingly smooth. Does anyone have recommendations for a good local bank for business accounts?",
-    tags: ["Registration", "Banking"],
-    likes: 12,
-    comments: 4,
-  },
-  {
-    id: 2,
-    author: "Dana S.",
-    role: "Small Business Owner",
-    avatar: "DS",
-    time: "5 hours ago",
-    content:
-      "Thinking about switching from the simplified tax regime to retail tax. Has anyone done the math for a coffee shop with ~5M KZT monthly turnover?",
-    tags: ["Taxes", "Coffee Shop"],
-    likes: 8,
-    comments: 7,
-  },
-  {
-    id: 3,
-    author: "Ruslan M.",
-    role: "Tech Startup",
-    avatar: "RM",
-    time: "1 day ago",
-    content:
-      "Looking for a co-founder with marketing experience for a new EdTech project focused on language learning. PM me if interested!",
-    tags: ["Co-founder", "EdTech"],
-    likes: 24,
-    comments: 2,
-  },
-];
+import { Card, Button, TextArea, Navbar, Loading, Alert } from "../components";
+import { contentService, type Post } from "../services/contentService";
 
 const TRENDING = ["#Registration", "#Taxes2026", "#Grants", "#Marketing", "#Hiring"];
 
 export const FeedPage: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [newPostContent, setNewPostContent] = useState<string>("");
   const [topicFilter, setTopicFilter] = useState<string | null>(null);
+
+  const fetchPosts = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await contentService.getPosts();
+      setPosts(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load posts");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   const filteredPosts = useMemo(() => {
     if (!topicFilter) return posts;
     const needle = topicFilter.replace(/^#/, "").toLowerCase();
     return posts.filter((p) =>
-      p.tags.some((t) => t.toLowerCase().includes(needle))
+      p.content.toLowerCase().includes(needle)
     );
   }, [posts, topicFilter]);
 
-  const handlePost = (): void => {
+  const handlePost = async (): Promise<void> => {
     const text = newPostContent.trim();
     if (!text) return;
 
-    const newPost: Post = {
-      id: Date.now(),
-      author: "You",
-      role: "Founder",
-      avatar: "ME",
-      time: "Just now",
-      content: text,
-      tags: ["General"],
-      likes: 0,
-      comments: 0,
-    };
-
-    setPosts((prev) => [newPost, ...prev]);
-    setNewPostContent("");
+    try {
+      const newPost = await contentService.createPost({ content: text });
+      setPosts((prev) => [newPost, ...prev]);
+      setNewPostContent("");
+    } catch {
+      setError("Failed to create post");
+    }
   };
 
-  const handleLike = (id: number): void => {
-    setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, likes: p.likes + 1 } : p))
-    );
+  const handleLike = async (id: string): Promise<void> => {
+    try {
+      const updatedPost = await contentService.likePost(id);
+      setPosts((prev) =>
+        prev.map((p) => (p.id === id ? updatedPost : p))
+      );
+    } catch {
+      // Silently fail
+    }
   };
 
   const initials = (s: string) => {
+    if (!s) return "U";
     const parts = s.trim().split(" ");
     const a = parts[0]?.[0] ?? "U";
     const b = parts[1]?.[0] ?? "";
@@ -135,6 +100,12 @@ export const FeedPage: React.FC = () => {
               </div>
             </div>
 
+            {error && (
+              <div className="mt-6">
+                <Alert type="error" message={error} onClose={() => setError("")} />
+              </div>
+            )}
+
             {/* Content grid */}
             <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Main feed */}
@@ -142,7 +113,7 @@ export const FeedPage: React.FC = () => {
                 {/* Composer */}
                 <Card className="border border-slate-200 bg-white shadow-sm p-6">
                   <div className="flex gap-4">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-sm">
                       ME
                     </div>
 
@@ -177,81 +148,76 @@ export const FeedPage: React.FC = () => {
                 </Card>
 
                 {/* Posts */}
-                {filteredPosts.map((post) => (
-                  <Card
-                    key={post.id}
-                    className="border border-slate-200 bg-white shadow-sm p-6"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex gap-3">
-                        <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold">
-                          {post.avatar || initials(post.author)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-900">
-                            {post.author}
+                {isLoading && posts.length === 0 ? (
+                  <Loading />
+                ) : (
+                  filteredPosts.map((post) => (
+                    <Card
+                      key={post.id}
+                      className="border border-slate-200 bg-white shadow-sm p-6"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold text-sm">
+                            {post.authorUsername ? initials(post.authorUsername) : initials(post.authorId)}
                           </div>
-                          <div className="text-xs text-slate-500">
-                            {post.role} • {post.time}
+                          <div>
+                            <div className="font-semibold text-slate-900">
+                              {post.authorUsername || `User ${post.authorId.substring(0, 5)}`}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              Founder • {new Date(post.createdAt).toLocaleDateString()}
+                            </div>
                           </div>
                         </div>
+
+                        <button
+                          type="button"
+                          className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center"
+                          title="More"
+                        >
+                          <MoreHorizontal className="h-4 w-4 text-slate-400" />
+                        </button>
                       </div>
 
-                      <button
-                        type="button"
-                        className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center"
-                        title="More"
-                      >
-                        <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                      </button>
-                    </div>
+                      <p className="mt-4 whitespace-pre-wrap text-slate-800">
+                        {post.content}
+                      </p>
 
-                    <p className="mt-4 whitespace-pre-wrap text-slate-800">
-                      {post.content}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                      <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleLike(post.id)}
                         >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
+                          <span className="inline-flex items-center gap-2">
+                            <ThumbsUp className="h-4 w-4" />
+                            {post.likesCount} Likes
+                          </span>
+                        </Button>
 
-                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleLike(post.id)}
-                      >
-                        <span className="inline-flex items-center gap-2">
-                          <ThumbsUp className="h-4 w-4" />
-                          {post.likes} Likes
-                        </span>
-                      </Button>
+                        <Link to={`/post/${post.id}`}>
+                          <Button variant="ghost">
+                            <span className="inline-flex items-center gap-2">
+                              <MessageSquare className="h-4 w-4" />
+                              {post.commentsCount} Comments
+                            </span>
+                          </Button>
+                        </Link>
 
-                      <Button variant="ghost">
-                        <span className="inline-flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4" />
-                          {post.comments} Comments
-                        </span>
-                      </Button>
+                        <Button variant="ghost">
+                          <span className="inline-flex items-center gap-2">
+                            <Share2 className="h-4 w-4" />
+                            Share
+                          </span>
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                )}
 
-                      <Button variant="ghost">
-                        <span className="inline-flex items-center gap-2">
-                          <Share2 className="h-4 w-4" />
-                          Share
-                        </span>
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-
-                {filteredPosts.length === 0 ? (
+                {!isLoading && filteredPosts.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-slate-600">
-                    No posts match this topic yet.
+                    No posts found.
                   </div>
                 ) : null}
               </div>

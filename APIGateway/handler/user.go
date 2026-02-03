@@ -79,6 +79,7 @@ func RegisterUserRoutes(r *gin.Engine, client userpb.UserServiceClient) {
 	users.GET("/me", func(c *gin.Context) {
 		handleGetCurrentUser(c, client)
 	})
+	users.PUT("/:id", updateProfileHandler(client))
 }
 
 // handleGetCurrentUser forwards Authorization header to UserService and returns current user.
@@ -106,4 +107,37 @@ func handleGetCurrentUser(c *gin.Context, client userpb.UserServiceClient) {
 		"createdAt": "",
 		"updatedAt": "",
 	})
+}
+
+func updateProfileHandler(client userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid authorization header"})
+			return
+		}
+
+		var req userpb.UpdateProfileRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx := metadata.NewOutgoingContext(c.Request.Context(), metadata.Pairs("authorization", authHeader))
+		resp, err := client.UpdateProfile(ctx, &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"id":        resp.GetUserId(),
+			"username":  resp.GetUsername(),
+			"email":     resp.GetEmail(),
+			"role":      resp.GetRole(),
+			"bio":       resp.GetBio(),
+			"createdAt": "",
+			"updatedAt": "",
+		})
+	}
 }

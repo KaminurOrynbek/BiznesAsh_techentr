@@ -20,6 +20,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
+  authorUsername?: string;
 }
 
 export interface CreatePostRequest {
@@ -31,6 +32,26 @@ export interface CreateCommentRequest {
 }
 
 const CONTENT_PREFIX = "/content";
+
+/**
+ * Normalize Date from API (handle string or proto Timestamp object)
+ */
+function normalizeDate(raw: unknown): string {
+  if (!raw) return "";
+
+  // If it's a string, just return it
+  if (typeof raw === "string") return raw;
+
+  // If it's a proto Timestamp object { seconds, nanos }
+  const obj = raw as Record<string, unknown>;
+  const seconds = Number(obj.seconds ?? obj.Seconds ?? 0);
+
+  if (Number.isFinite(seconds) && seconds > 0) {
+    return new Date(seconds * 1000).toISOString();
+  }
+
+  return "";
+}
 
 /**
  * Normalize API response to Post
@@ -48,16 +69,16 @@ function normalizePost(raw: unknown): Post {
   const content = String(p.content ?? "");
   const likesCount = Number(p.likesCount ?? p.likes_count ?? 0);
   const commentsCount = Number(p.commentsCount ?? p.comments_count ?? 0);
-  const createdAt = String(p.createdAt ?? p.created_at ?? "");
-  const updatedAt = String(p.updatedAt ?? p.updated_at ?? "");
+  const createdAt = normalizeDate(p.createdAt ?? p.created_at);
+  const updatedAt = normalizeDate(p.updatedAt ?? p.updated_at);
 
   // Optional author username (if exists in payload)
   const authorUsername =
     typeof p.authorUsername === "string"
       ? p.authorUsername
       : typeof p.author_username === "string"
-      ? p.author_username
-      : undefined;
+        ? p.author_username
+        : undefined;
 
   return {
     id,
@@ -67,6 +88,31 @@ function normalizePost(raw: unknown): Post {
     commentsCount: Number.isFinite(commentsCount) ? commentsCount : 0,
     createdAt,
     updatedAt,
+    ...(authorUsername ? { authorUsername } : {}),
+  };
+}
+
+/**
+ * Normalize API response to Comment
+ */
+function normalizeComment(raw: unknown): Comment {
+  const obj = (raw ?? {}) as Record<string, unknown>;
+  const c = (obj.comment ?? obj) as Record<string, unknown>;
+
+  const authorUsername =
+    typeof c.authorUsername === "string"
+      ? c.authorUsername
+      : typeof c.author_username === "string"
+        ? c.author_username
+        : undefined;
+
+  return {
+    id: String(c.id ?? ""),
+    postId: String(c.postId ?? c.post_id ?? ""),
+    authorId: String(c.authorId ?? c.author_id ?? ""),
+    content: String(c.content ?? ""),
+    createdAt: normalizeDate(c.createdAt ?? c.created_at),
+    updatedAt: normalizeDate(c.updatedAt ?? c.updated_at),
     ...(authorUsername ? { authorUsername } : {}),
   };
 }
@@ -117,13 +163,26 @@ export const contentService = {
   },
 
   getComments: async (postId: string): Promise<Comment[]> => {
-    const response = await apiClient.get<Comment[]>(`${CONTENT_PREFIX}/posts/${postId}/comments`);
-    return response.data;
+    const response = await apiClient.get<unknown>(`${CONTENT_PREFIX}/posts/${postId}/comments`);
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data.map((item) => normalizeComment(item));
+    }
+
+    const obj = (data ?? {}) as Record<string, unknown>;
+    const list = obj.comments;
+
+    if (Array.isArray(list)) {
+      return list.map((item) => normalizeComment(item));
+    }
+
+    return [];
   },
 
   createComment: async (postId: string, commentData: CreateCommentRequest): Promise<Comment> => {
-    const response = await apiClient.post<Comment>(`${CONTENT_PREFIX}/posts/${postId}/comments`, commentData);
-    return response.data;
+    const response = await apiClient.post<unknown>(`${CONTENT_PREFIX}/posts/${postId}/comments`, commentData);
+    return normalizeComment(response.data);
   },
 
   deleteComment: async (commentId: string): Promise<void> => {
