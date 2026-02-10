@@ -1,18 +1,23 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { MessageSquare, ThumbsUp, Share2, MoreHorizontal, Send, Sparkles } from "lucide-react";
+import { MessageSquare, Share2, MoreHorizontal, Send, Sparkles, Trash2, Search, X, ThumbsUp } from "lucide-react";
 
 import { Card, Button, TextArea, Navbar, Loading, Alert } from "../components";
 import { contentService, type Post } from "../services/contentService";
+import { useAuth } from "../context/useAuth";
+
 
 const TRENDING = ["#Registration", "#Taxes2026", "#Grants", "#Marketing", "#Hiring"];
 
 export const FeedPage: React.FC = () => {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [newPostContent, setNewPostContent] = useState<string>("");
   const [topicFilter, setTopicFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
@@ -31,12 +36,24 @@ export const FeedPage: React.FC = () => {
   }, [fetchPosts]);
 
   const filteredPosts = useMemo(() => {
-    if (!topicFilter) return posts;
-    const needle = topicFilter.replace(/^#/, "").toLowerCase();
-    return posts.filter((p) =>
-      p.content.toLowerCase().includes(needle)
-    );
-  }, [posts, topicFilter]);
+    let result = posts;
+
+    if (topicFilter) {
+      const needle = topicFilter.replace(/^#/, "").toLowerCase();
+      result = result.filter((p) =>
+        p.content.toLowerCase().includes(needle)
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((p) =>
+        p.content.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [posts, topicFilter, searchQuery]);
 
   const handlePost = async (): Promise<void> => {
     const text = newPostContent.trim();
@@ -51,14 +68,41 @@ export const FeedPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (postId: string): Promise<void> => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await contentService.deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (err) {
+      setError("Failed to delete post");
+    }
+  };
+
   const handleLike = async (id: string): Promise<void> => {
     try {
-      const updatedPost = await contentService.likePost(id);
+      const likesCount = await contentService.likePost(id);
       setPosts((prev) =>
-        prev.map((p) => (p.id === id ? updatedPost : p))
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return { ...p, likesCount, liked: true };
+        })
       );
     } catch {
-      // Silently fail
+      setError("Failed to like post");
+    }
+  };
+
+  const handleUnlike = async (id: string): Promise<void> => {
+    try {
+      const likesCount = await contentService.unlikePost(id);
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return { ...p, likesCount, liked: false };
+        })
+      );
+    } catch {
+      setError("Failed to unlike post");
     }
   };
 
@@ -68,6 +112,24 @@ export const FeedPage: React.FC = () => {
     const a = parts[0]?.[0] ?? "U";
     const b = parts[1]?.[0] ?? "";
     return (a + b).toUpperCase();
+  };
+
+  const HighlightText = ({ text, query }: { text: string; query: string }) => {
+    if (!query.trim()) return <>{text}</>;
+    const parts = text.split(new RegExp(`(${query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")})`, "gi"));
+    return (
+      <>
+        {parts.map((part, i) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <span key={i} className="bg-blue-100 text-blue-800 font-bold rounded-sm px-0.5">
+              {part}
+            </span>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
   };
 
   return (
@@ -88,15 +150,35 @@ export const FeedPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                {topicFilter ? (
+              <div className="flex items-center gap-3 w-full sm:w-80">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search posts..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-full pl-10 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {topicFilter && (
                   <Button
                     variant="secondary"
                     onClick={() => setTopicFilter(null)}
+                    className="whitespace-nowrap rounded-full px-4"
                   >
-                    Clear filter
+                    Clear topic
                   </Button>
-                ) : null}
+                )}
               </div>
             </div>
 
@@ -106,17 +188,13 @@ export const FeedPage: React.FC = () => {
               </div>
             )}
 
-            {/* Content grid */}
             <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
-              {/* Main feed */}
               <div className="space-y-6 lg:col-span-2">
-                {/* Composer */}
                 <Card className="border border-slate-200 bg-white shadow-sm p-6">
                   <div className="flex gap-4">
                     <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-sm">
                       ME
                     </div>
-
                     <div className="flex-1 space-y-4">
                       <TextArea
                         placeholder="Share your idea or ask a question..."
@@ -126,12 +204,10 @@ export const FeedPage: React.FC = () => {
                         }
                         rows={4}
                       />
-
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-slate-500">
                           Tip: choose a topic on the right to filter
                         </div>
-
                         <Button
                           variant="primary"
                           onClick={handlePost}
@@ -147,91 +223,108 @@ export const FeedPage: React.FC = () => {
                   </div>
                 </Card>
 
-                {/* Posts */}
                 {isLoading && posts.length === 0 ? (
                   <Loading />
                 ) : (
-                  filteredPosts.map((post) => (
-                    <Card
-                      key={post.id}
-                      className="border border-slate-200 bg-white shadow-sm p-6"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex gap-3">
-                          <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold text-sm">
-                            {post.authorUsername ? initials(post.authorUsername) : initials(post.authorId)}
+                  filteredPosts.map((post) => {
+                    return (
+                      <Card key={post.id} className="border border-slate-200 bg-white shadow-sm p-6 relative overflow-visible">
+                        <div className="flex items-start justify-between">
+                          <div className="flex gap-3">
+                            <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold text-sm">
+                              {post.authorUsername ? initials(post.authorUsername) : initials(post.authorId)}
+                            </div>
+                            <div>
+                              <Link
+                                to={`/profile/${post.authorId}`}
+                                className="font-semibold text-slate-900 hover:text-blue-600 hover:underline transition-colors"
+                              >
+                                {post.authorUsername || `User ${post.authorId.substring(0, 5)}`}
+                              </Link>
+                              <div className="text-xs text-slate-500">
+                                Founder • {new Date(post.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-semibold text-slate-900">
-                              {post.authorUsername || `User ${post.authorId.substring(0, 5)}`}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              Founder • {new Date(post.createdAt).toLocaleDateString()}
-                            </div>
+
+                          <div className="flex items-center gap-2">
+                            {user && post.authorId === user.id && (
+                              <button
+                                onClick={() => handleDelete(post.id)}
+                                className="h-8 w-8 rounded-full hover:bg-red-50 flex items-center justify-center group"
+                                title="Delete Post"
+                              >
+                                <Trash2 className="h-4 w-4 text-slate-400 group-hover:text-red-500 transition-colors" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center"
+                              title="More"
+                            >
+                              <MoreHorizontal className="h-4 w-4 text-slate-400" />
+                            </button>
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center"
-                          title="More"
-                        >
-                          <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                        </button>
-                      </div>
+                        <p className="mt-4 whitespace-pre-wrap text-slate-800">
+                          <HighlightText text={post.content} query={searchQuery} />
+                        </p>
 
-                      <p className="mt-4 whitespace-pre-wrap text-slate-800">
-                        {post.content}
-                      </p>
 
-                      <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleLike(post.id)}
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <ThumbsUp className="h-4 w-4" />
-                            {post.likesCount} Likes
-                          </span>
-                        </Button>
 
-                        <Link to={`/post/${post.id}`}>
+                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                          <div className="relative">
+                            <Button
+                              variant="ghost"
+                              className={`transition-colors flex gap-2 ${post.liked ? "text-blue-600 bg-blue-50" : "hover:bg-slate-50"}`}
+                              onClick={() => {
+                                if (post.liked) {
+                                  handleUnlike(post.id);
+                                } else {
+                                  handleLike(post.id);
+                                }
+                              }}
+                            >
+                              <ThumbsUp className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
+                              <span className="font-medium">Like {post.likesCount > 0 && `(${post.likesCount})`}</span>
+                            </Button>
+                          </div>
+
+                          <Link to={`/post/${post.id}`}>
+                            <Button variant="ghost">
+                              <span className="inline-flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4" />
+                                {post.commentsCount} Comments
+                              </span>
+                            </Button>
+                          </Link>
+
                           <Button variant="ghost">
                             <span className="inline-flex items-center gap-2">
-                              <MessageSquare className="h-4 w-4" />
-                              {post.commentsCount} Comments
+                              <Share2 className="h-4 w-4" />
+                              Share
                             </span>
                           </Button>
-                        </Link>
-
-                        <Button variant="ghost">
-                          <span className="inline-flex items-center gap-2">
-                            <Share2 className="h-4 w-4" />
-                            Share
-                          </span>
-                        </Button>
-                      </div>
-                    </Card>
-                  ))
+                        </div>
+                      </Card>
+                    );
+                  })
                 )}
 
-                {!isLoading && filteredPosts.length === 0 ? (
+                {!isLoading && filteredPosts.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-slate-600">
                     No posts found.
                   </div>
-                ) : null}
+                )}
               </div>
 
-              {/* Sidebar */}
               <div className="space-y-6">
                 <Card className="border border-slate-200 bg-white shadow-sm p-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      Trending Topics
-                    </h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Trending Topics</h3>
                     <Sparkles className="h-4 w-4 text-slate-400" />
                   </div>
-
                   <div className="mt-4 flex flex-wrap gap-2">
                     {TRENDING.map((t) => (
                       <button
@@ -243,48 +336,24 @@ export const FeedPage: React.FC = () => {
                       </button>
                     ))}
                   </div>
-
-                  {topicFilter ? (
-                    <div className="mt-4 text-xs text-slate-500">
-                      Filtered by{" "}
-                      <span className="font-semibold text-slate-700">
-                        {topicFilter}
-                      </span>
-                    </div>
-                  ) : null}
                 </Card>
 
                 <Card className="border-none bg-gradient-to-br from-blue-600 to-teal-600 text-white shadow-sm p-6">
                   <h3 className="text-lg font-bold">Need expert help?</h3>
-                  <p className="mt-2 text-sm text-blue-100">
-                    Get a consultation with a legal or tax expert for your specific case.
-                  </p>
-
+                  <p className="mt-2 text-sm text-blue-100">Get a consultation with a legal or tax expert.</p>
                   <div className="mt-5">
                     <Link to="/handbook">
-                      <Button variant="secondary" className="w-full">
-                        Book Consultation
-                      </Button>
+                      <Button variant="secondary" className="w-full">Book Consultation</Button>
                     </Link>
                   </div>
-
-                  <p className="mt-3 text-[11px] text-blue-100/90">
-                    (MVP) You can link this to a future booking page.
-                  </p>
                 </Card>
 
                 <Card className="border border-slate-200 bg-white shadow-sm p-6">
                   <h4 className="font-semibold text-slate-900">Quick links</h4>
                   <div className="mt-3 grid gap-2 text-sm">
-                    <Link to="/handbook" className="text-slate-600 hover:text-blue-600">
-                      Entrepreneur’s Handbook
-                    </Link>
-                    <Link to="/notifications" className="text-slate-600 hover:text-blue-600">
-                      Notifications
-                    </Link>
-                    <Link to="/profile" className="text-slate-600 hover:text-blue-600">
-                      Your profile
-                    </Link>
+                    <Link to="/handbook" className="text-slate-600 hover:text-blue-600">Handbook</Link>
+                    <Link to="/notifications" className="text-slate-600 hover:text-blue-600">Notifications</Link>
+                    <Link to="/profile" className="text-slate-600 hover:text-blue-600">Your profile</Link>
                   </div>
                 </Card>
               </div>
@@ -295,3 +364,5 @@ export const FeedPage: React.FC = () => {
     </>
   );
 };
+
+

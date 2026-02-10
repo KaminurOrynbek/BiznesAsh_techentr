@@ -79,6 +79,24 @@ func RegisterUserRoutes(r *gin.Engine, client userpb.UserServiceClient) {
 	users.GET("/me", func(c *gin.Context) {
 		handleGetCurrentUser(c, client)
 	})
+	users.GET("/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		resp, err := client.GetUser(context.Background(), &userpb.GetUserRequest{UserId: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"id":        resp.GetUserId(),
+			"username":  resp.GetUsername(),
+			"email":     resp.GetEmail(),
+			"role":      resp.GetRole(),
+			"bio":       resp.GetBio(),
+			"createdAt": "",
+			"updatedAt": "",
+		})
+	})
 	users.PUT("/:id", updateProfileHandler(client))
 }
 

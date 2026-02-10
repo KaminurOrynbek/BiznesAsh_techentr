@@ -27,3 +27,17 @@ func (r *notificationRepositoryImpl) UserExists(ctx context.Context, userID stri
 func (r *notificationRepositoryImpl) PostExists(ctx context.Context, postID string) (bool, error) {
 	return r.dao.PostExists(ctx, postID)
 }
+
+func (r *notificationRepositoryImpl) GetNotifications(ctx context.Context, userID string, limit, offset int) ([]*entity.Notification, int, error) {
+	models, total, err := r.dao.GetNotifications(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	notifications := make([]*entity.Notification, len(models))
+	for i, m := range models {
+		notifications[i] = m.ToEntity()
+	}
+
+	return notifications, total, nil
+}

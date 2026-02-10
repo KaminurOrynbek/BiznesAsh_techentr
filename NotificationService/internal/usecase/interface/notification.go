@@ -14,4 +14,5 @@ type NotificationUsecase interface {
 	GetWelcomeEmailHTML() string
 	NotifyPostLike(ctx context.Context, n *entity.Notification) error
 	NotifyCommentLike(ctx context.Context, n *entity.Notification) error
+	GetNotifications(ctx context.Context, userID string, page, limit int) ([]*entity.Notification, int, error)
 }

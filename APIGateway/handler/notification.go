@@ -40,10 +40,58 @@ func RegisterNotificationRoutes(r *gin.Engine, client notificationpb.Notificatio
 		c.JSON(http.StatusOK, resp)
 	})
 
+	// auth-like routes but in notification svc
+	auth := r.Group("/auth")
+	auth.POST("/verify-email", func(c *gin.Context) {
+		var req notificationpb.VerifyCodeRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		resp, err := client.VerifyCode(context.Background(), &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !resp.Success {
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+	auth.POST("/resend-code", func(c *gin.Context) {
+		var req notificationpb.ResendCodeRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		resp, err := client.ResendCode(context.Background(), &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
 	// TEMP: make frontend /notifications stop failing (no 404)
 	n := r.Group("/notifications")
 	n.GET("", func(c *gin.Context) {
-		// unreadOnly := c.Query("unreadOnly") // you can read it, but you can't use it yet
-		c.JSON(http.StatusOK, []any{})
+		userID := c.Query("userId")
+		if userID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+			return
+		}
+
+		resp, err := client.GetNotifications(context.Background(), &notificationpb.GetNotificationsRequest{
+			UserId: userID,
+			Page:   1,
+			Limit:  20,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp.GetNotifications())
 	})
 }

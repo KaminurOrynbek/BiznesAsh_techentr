@@ -13,7 +13,7 @@ import (
 
 type ContentSubscriber struct {
 	queue               queue.MessageQueue
-	notificationUsecase usecase.NotificationUsecase 
+	notificationUsecase usecase.NotificationUsecase
 }
 
 func NewContentSubscriber(q queue.MessageQueue, ns usecase.NotificationUsecase) *ContentSubscriber {
@@ -120,12 +120,16 @@ func (s *ContentSubscriber) handlePostUpdated(payload payloads.PostUpdated) {
 }
 
 func (s *ContentSubscriber) handleCommentCreated(payload payloads.CommentCreated) {
-	log.Printf("New comment created on post: %s by user: %s", payload.PostID, payload.UserID)
+	log.Printf("New comment created on post: %s by actor: %s (target %s)", payload.PostID, payload.ActorID, payload.TargetUserID)
 	notification := &entity.Notification{
-		UserID:    payload.UserID,
+		UserID:    payload.TargetUserID,
+		ActorID:   payload.ActorID,
 		Message:   "New comment created on your post.",
 		PostID:    &payload.PostID,
 		CommentID: &payload.CommentID,
+		Metadata: map[string]interface{}{
+			"content": payload.Content,
+		},
 	}
 	err := s.notificationUsecase.SendCommentNotification(context.Background(), notification)
 	if err != nil {
@@ -147,9 +151,10 @@ func (s *ContentSubscriber) handlePostReported(payload payloads.PostReported) {
 }
 
 func (s *ContentSubscriber) handlePostLiked(payload payloads.PostLiked) {
-	log.Printf("Post liked: %s (notify user %s)", payload.PostID, payload.UserID)
+	log.Printf("Post liked: %s (actor %s, target %s)", payload.PostID, payload.ActorID, payload.TargetUserID)
 	notification := &entity.Notification{
-		UserID:  payload.UserID,
+		UserID:  payload.TargetUserID,
+		ActorID: payload.ActorID,
 		Message: "Your post got a new like!",
 		PostID:  &payload.PostID,
 	}
@@ -160,9 +165,10 @@ func (s *ContentSubscriber) handlePostLiked(payload payloads.PostLiked) {
 }
 
 func (s *ContentSubscriber) handleCommentLiked(payload payloads.CommentLiked) {
-	log.Printf("Comment liked: %s (notify user %s)", payload.CommentID, payload.UserID)
+	log.Printf("Comment liked: %s (actor %s, target %s)", payload.CommentID, payload.ActorID, payload.TargetUserID)
 	notification := &entity.Notification{
-		UserID:    payload.UserID,
+		UserID:    payload.TargetUserID,
+		ActorID:   payload.ActorID,
 		Message:   "Your comment got a new like!",
 		CommentID: &payload.CommentID,
 	}

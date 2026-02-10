@@ -6,16 +6,22 @@ import (
 	"github.com/KaminurOrynbek/BiznesAsh/internal/entity"
 	_interface "github.com/KaminurOrynbek/BiznesAsh/internal/repository/interface"
 	usecase "github.com/KaminurOrynbek/BiznesAsh/internal/usecase/interface"
+	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
 	"github.com/google/uuid"
+	"log"
 	"time"
 )
 
 type notificationUsecase struct {
-	repo _interface.NotificationRepository
+	repo       _interface.NotificationRepository
+	userClient userpb.UserServiceClient
 }
 
-func NewNotificationUsecase(repo _interface.NotificationRepository, sender usecase.EmailSender) *notificationUsecase {
-	return &notificationUsecase{repo: repo}
+func NewNotificationUsecase(repo _interface.NotificationRepository, userClient userpb.UserServiceClient, sender usecase.EmailSender) *notificationUsecase {
+	return &notificationUsecase{
+		repo:       repo,
+		userClient: userClient,
+	}
 }
 
 func (u *notificationUsecase) SendCommentNotification(ctx context.Context, n *entity.Notification) error {
@@ -46,7 +52,35 @@ func (u *notificationUsecase) NotifyCommentLike(ctx context.Context, n *entity.N
 	return u.saveTypedNotification(ctx, n, "COMMENT_LIKE")
 }
 
+func (u *notificationUsecase) GetNotifications(ctx context.Context, userID string, page, limit int) ([]*entity.Notification, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+	return u.repo.GetNotifications(ctx, userID, limit, offset)
+}
+
 func (u *notificationUsecase) saveTypedNotification(ctx context.Context, n *entity.Notification, typ string) error {
+	// Allow self-notifications for now (as requested by user)
+	if n.ActorID != "" && n.ActorID == n.UserID {
+		log.Printf("[INFO] Processing self-notification for user %s", n.UserID)
+	}
+
+	// 1. Fetch actor username if missing
+	if n.ActorID != "" && n.ActorUsername == "" {
+		log.Printf("[DEBUG] Fetching username for actor %s", n.ActorID)
+		resp, err := u.userClient.GetUser(ctx, &userpb.GetUserRequest{UserId: n.ActorID})
+		if err == nil && resp != nil {
+			n.ActorUsername = resp.Username
+			log.Printf("[DEBUG] Found actor username: %s", n.ActorUsername)
+		} else {
+			log.Printf("[DEBUG] Failed to fetch actor username: %v", err)
+		}
+	}
+
 	// Validate user exists
 	exists, err := u.repo.UserExists(ctx, n.UserID)
 	if err != nil {

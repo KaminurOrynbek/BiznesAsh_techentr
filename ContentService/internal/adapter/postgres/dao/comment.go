@@ -50,3 +50,14 @@ func (dao *CommentDAO) ListByPostID(ctx context.Context, postID string) ([]*mode
 	err := dao.db.SelectContext(ctx, &comments, query, postID)
 	return comments, err
 }
+
+func (dao *CommentDAO) GetByID(ctx context.Context, id string) (*model.Comment, error) {
+	query := `
+		SELECT id, post_id, author_id, content, created_at, updated_at
+		FROM comments
+		WHERE id = $1
+	`
+	var comment model.Comment
+	err := dao.db.GetContext(ctx, &comment, query, id)
+	return &comment, err
+}

@@ -10,4 +10,5 @@ type CommentRepository interface {
 	Update(ctx context.Context, comment *entity.Comment) error
 	Delete(ctx context.Context, commentID string) error
 	ListByPostID(ctx context.Context, postID string) ([]*entity.Comment, error)
+	GetByID(ctx context.Context, id string) (*entity.Comment, error)
 }

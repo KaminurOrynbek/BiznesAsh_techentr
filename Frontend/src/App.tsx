@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
 
-import { ProtectedRoute } from "./components";
+import { Toaster } from "react-hot-toast";
+import { ProtectedRoute, NotificationWatcher } from "./components";
 import {
   HomePage,
   LoginPage,
@@ -13,16 +14,20 @@ import {
   ProfilePage,
   SubscriptionPage,
   ExpertListingPage,
+  VerifyEmailPage,
 } from "./pages";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <Toaster />
+        <NotificationWatcher />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
 
           {/* Public (or make protected if you want) */}
           <Route path="/handbook" element={<HandbookPage />} />
@@ -51,6 +56,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

@@ -18,4 +18,5 @@ type Post struct {
 	DislikesCount int32
 	CommentsCount int32
 	Comments      []*Comment
+	Liked         bool
 }

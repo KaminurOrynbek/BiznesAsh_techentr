@@ -8,4 +8,5 @@ export { ProfilePage } from './ProfilePage';
 export { HandbookPage } from './HandbookPage';
 export { SubscriptionPage } from './SubscriptionPage';
 export { ExpertListingPage } from './ExpertListingPage';
+export { VerifyEmailPage } from './VerifyEmailPage';
 

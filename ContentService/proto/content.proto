@@ -1,0 +1,177 @@
+syntax = "proto3";
+
+package content;
+
+option go_package = "github.com/KaminurOrynbek/BiznesAsh/auto-proto/content;content";
+
+import "google/protobuf/timestamp.proto";
+
+service ContentService {
+  rpc CreatePost(CreatePostRequest) returns (PostResponse);
+  rpc UpdatePost(UpdatePostRequest) returns (PostResponse);
+  rpc DeletePost(PostIdRequest) returns (DeleteResponse);
+  rpc GetPost(PostIdRequest) returns (PostResponse);
+  rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
+  rpc SearchPosts(SearchPostsRequest) returns (ListPostsResponse);
+
+  rpc CreateComment(CreateCommentRequest) returns (CommentResponse);
+  rpc UpdateComment(UpdateCommentRequest) returns (CommentResponse);
+  rpc DeleteComment(CommentIdRequest) returns (DeleteResponse);
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
+
+  rpc LikePost(LikePostRequest) returns (LikePostResponse);
+  rpc UnlikePost(UnlikePostRequest) returns (UnlikePostResponse);
+  
+  rpc LikeComment(LikeCommentRequest) returns (LikeCommentResponse);
+  rpc UnlikeComment(UnlikeCommentRequest) returns (UnlikeCommentResponse);
+
+  // Deprecated/Removed:
+  // rpc ReactToPost(ReactToPostRequest) returns (ReactToPostResponse);
+  // rpc RemovePostReaction(RemovePostReactionRequest) returns (RemovePostReactionResponse);
+  // rpc ReactToComment(ReactToCommentRequest) returns (ReactToCommentResponse);
+  // rpc RemoveCommentReaction(RemoveCommentReactionRequest) returns (RemoveCommentReactionResponse);
+}
+
+enum PostType {
+  LEGAL_INFO = 0;
+  GUIDE = 1;
+}
+
+message Post {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  PostType type = 4;
+  string author_id = 5;
+  bool published = 6;
+  int32 likes_count = 7;
+  int32 dislikes_count = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  int32 comments_count = 11;
+  repeated Comment comments = 12;
+  bool liked = 13;
+}
+
+message Comment {
+  string id = 1;
+  string post_id = 2;
+  string author_id = 3;
+  string content = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  bool liked = 7;
+  int32 likes_count = 8;
+}
+
+message CreatePostRequest {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  PostType type = 4;
+  string author_id = 5;
+  bool published = 6;
+}
+
+message UpdatePostRequest {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  bool published = 4;
+}
+
+message PostIdRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+message ListPostsRequest {
+  PostType type = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string user_id = 4;
+}
+
+message SearchPostsRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string user_id = 4;
+}
+
+message PostResponse {
+  Post post = 1;
+}
+
+message ListPostsResponse {
+  repeated Post posts = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
+
+message CreateCommentRequest {
+  string id = 1;
+  string post_id = 2;
+  string author_id = 3;
+  string content = 4;
+}
+
+message UpdateCommentRequest {
+  string id = 1;
+  string content = 2;
+}
+
+message CommentIdRequest {
+  string id = 1;
+}
+
+message ListCommentsRequest {
+  string post_id = 1;
+  string user_id = 2;
+}
+
+message CommentResponse {
+  Comment comment = 1;
+}
+
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+}
+
+message LikePostRequest {
+  string post_id = 1;
+  string user_id = 2;
+}
+
+message LikePostResponse {
+  int32 likes_count = 1;
+}
+
+message UnlikePostRequest {
+  string post_id = 1;
+  string user_id = 2;
+}
+
+message UnlikePostResponse {
+  int32 likes_count = 1;
+}
+
+message LikeCommentRequest {
+  string comment_id = 1;
+  string user_id = 2;
+}
+
+message LikeCommentResponse {
+  int32 likes_count = 1;
+}
+
+message UnlikeCommentRequest {
+  string comment_id = 1;
+  string user_id = 2;
+}
+
+message UnlikeCommentResponse {
+  int32 likes_count = 1;
+}

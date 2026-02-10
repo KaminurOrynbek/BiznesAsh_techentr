@@ -27,17 +27,20 @@ export const authService = {
   login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
     const res = await apiClient.post<AuthResponse>("/auth/login", credentials);
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("userId", res.data.userId); // Store userId
     return res.data;
   },
 
   register: async (data: { username: string; email: string; password: string }): Promise<AuthResponse> => {
     const res = await apiClient.post<AuthResponse>("/auth/register", data);
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("userId", res.data.userId); // Store userId
     return res.data;
   },
 
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userId");
   },
 
   // пока не используем /auth/me, чтобы не ломать редирект
@@ -48,6 +51,11 @@ export const authService = {
 
   async updateProfile(userId: string, payload: UpdateProfilePayload): Promise<User> {
     const res = await apiClient.put<User>(`/users/${userId}`, payload);
+    return res.data;
+  },
+
+  getUserById: async (userId: string): Promise<User> => {
+    const res = await apiClient.get<User>(`/users/${userId}`);
     return res.data;
   },
 };

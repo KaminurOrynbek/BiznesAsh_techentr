@@ -17,11 +17,11 @@ type postUsecaseImpl struct {
 }
 
 func NewPostUsecase(postRepo _interface.PostRepository, commentRepo _interface.CommentRepository, likeRepo _interface.LikeRepository) usecase.PostUsecase {
-	return usecase.PostUsecase(&postUsecaseImpl{
+	return &postUsecaseImpl{
 		postRepo:    postRepo,
 		commentRepo: commentRepo,
 		likeRepo:    likeRepo,
-	})
+	}
 }
 
 func (u *postUsecaseImpl) CreatePost(ctx context.Context, post *entity.Post) error {
@@ -40,7 +40,7 @@ func (u *postUsecaseImpl) DeletePost(ctx context.Context, id string) error {
 	return u.postRepo.Delete(ctx, id)
 }
 
-func (u *postUsecaseImpl) GetPost(ctx context.Context, id string) (*entity.Post, error) {
+func (u *postUsecaseImpl) GetPost(ctx context.Context, id string, currentUserID string) (*entity.Post, error) {
 	post, err := u.postRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -50,23 +50,21 @@ func (u *postUsecaseImpl) GetPost(ctx context.Context, id string) (*entity.Post,
 	if err != nil {
 		return nil, err
 	}
-	var valComments []*entity.Comment
-	for _, c := range comments {
-		valComments = append(valComments, c)
-	}
-	post.Comments = valComments
-
+	post.Comments = comments
 	post.CommentsCount = int32(len(comments))
 
-	likes, _ := u.likeRepo.CountLikes(ctx, id)
-	dislikes, _ := u.likeRepo.CountDislikes(ctx, id)
-	post.LikesCount = likes
-	post.DislikesCount = dislikes
+	likesCount, _ := u.likeRepo.GetPostLikes(ctx, id)
+	post.LikesCount = likesCount
+
+	if currentUserID != "" {
+		liked, _ := u.likeRepo.IsPostLiked(ctx, currentUserID, id)
+		post.Liked = liked
+	}
 
 	return post, nil
 }
 
-func (u *postUsecaseImpl) ListPosts(ctx context.Context, offset, limit int) ([]*entity.Post, error) {
+func (u *postUsecaseImpl) ListPosts(ctx context.Context, offset, limit int, currentUserID string) ([]*entity.Post, error) {
 	posts, err := u.postRepo.List(ctx, offset, limit)
 	if err != nil {
 		return nil, err
@@ -79,16 +77,19 @@ func (u *postUsecaseImpl) ListPosts(ctx context.Context, offset, limit int) ([]*
 			post.CommentsCount = int32(len(comments))
 		}
 
-		likes, _ := u.likeRepo.CountLikes(ctx, post.ID)
-		dislikes, _ := u.likeRepo.CountDislikes(ctx, post.ID)
-		post.LikesCount = likes
-		post.DislikesCount = dislikes
+		likesCount, _ := u.likeRepo.GetPostLikes(ctx, post.ID)
+		post.LikesCount = likesCount
+
+		if currentUserID != "" {
+			liked, _ := u.likeRepo.IsPostLiked(ctx, currentUserID, post.ID)
+			post.Liked = liked
+		}
 	}
 
 	return posts, nil
 }
 
-func (u *postUsecaseImpl) SearchPosts(ctx context.Context, keyword string, offset, limit int) ([]*entity.Post, error) {
+func (u *postUsecaseImpl) SearchPosts(ctx context.Context, keyword string, offset, limit int, currentUserID string) ([]*entity.Post, error) {
 	posts, err := u.postRepo.Search(ctx, keyword, offset, limit)
 	if err != nil {
 		return nil, err
@@ -96,10 +97,17 @@ func (u *postUsecaseImpl) SearchPosts(ctx context.Context, keyword string, offse
 
 	for _, post := range posts {
 		comments, err := u.commentRepo.ListByPostID(ctx, post.ID)
-		if err != nil {
-			continue
+		if err == nil {
+			post.CommentsCount = int32(len(comments))
 		}
-		post.CommentsCount = int32(len(comments))
+
+		likesCount, _ := u.likeRepo.GetPostLikes(ctx, post.ID)
+		post.LikesCount = likesCount
+
+		if currentUserID != "" {
+			liked, _ := u.likeRepo.IsPostLiked(ctx, currentUserID, post.ID)
+			post.Liked = liked
+		}
 	}
 
 	return posts, nil

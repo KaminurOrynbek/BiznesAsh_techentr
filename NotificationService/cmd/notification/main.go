@@ -16,13 +16,15 @@ import (
 	"net"
 	"os"
 
-	pb "github.com/KaminurOrynbek/BiznesAsh/auto-proto/notification"
 	"github.com/KaminurOrynbek/BiznesAsh/internal/adapter/postgres"
 	delivery "github.com/KaminurOrynbek/BiznesAsh/internal/delivery/grpc"
 	repo "github.com/KaminurOrynbek/BiznesAsh/internal/repository/impl"
 	usecaseImpl "github.com/KaminurOrynbek/BiznesAsh/internal/usecase/impl"
+	notificationpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/notification"
 
 	"github.com/KaminurOrynbek/BiznesAsh_lib/queue"
+
+	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
 )
 
 type combinedUsecase struct {
@@ -64,8 +66,20 @@ func main() {
 	subscriptionRepo := repo.NewSubscriptionRepository(subscriptionDAO)
 	verificationRepo := repo.NewVerificationRepository(verificationDAO)
 
+	// User service client
+	userSvcAddr := os.Getenv("USER_SERVICE_ADDR")
+	if userSvcAddr == "" {
+		userSvcAddr = "localhost:50051"
+	}
+	userConn, err := grpc.Dial(userSvcAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to UserService: %v", err)
+	}
+	defer userConn.Close()
+	userClient := userpb.NewUserServiceClient(userConn)
+
 	combined := &combinedUsecase{
-		NotificationUsecase: usecaseImpl.NewNotificationUsecase(notificationRepo, emailSender),
+		NotificationUsecase: usecaseImpl.NewNotificationUsecase(notificationRepo, userClient, emailSender),
 		VerificationUsecase: usecaseImpl.NewVerificationUsecase(verificationRepo, emailSender),
 		SubscriptionUsecase: usecaseImpl.NewSubscriptionUsecase(subscriptionRepo),
 		EmailSender:         emailSender,
@@ -108,7 +122,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	// Register NotificationService server
-	pb.RegisterNotificationServiceServer(grpcServer, delivery.NewNotificationDelivery(combined))
+	notificationpb.RegisterNotificationServiceServer(grpcServer, delivery.NewNotificationDelivery(combined))
 
 	log.Printf("NotificationService gRPC server started on port %s", grpcPort)
 

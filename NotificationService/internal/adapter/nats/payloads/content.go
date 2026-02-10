@@ -13,10 +13,11 @@ type PostUpdated struct {
 }
 
 type CommentCreated struct {
-	CommentID string `json:"comment_id"`
-	PostID    string `json:"post_id"`
-	UserID    string `json:"user_id"`
-	Content   string `json:"content"`
+	CommentID    string `json:"comment_id"`
+	PostID       string `json:"post_id"`
+	ActorID      string `json:"actor_id"`
+	TargetUserID string `json:"target_user_id"`
+	Content      string `json:"content"`
 }
 
 type PostReported struct {
@@ -26,11 +27,13 @@ type PostReported struct {
 }
 
 type PostLiked struct {
-	UserID string `json:"user_id"`
-	PostID string `json:"post_id"`
+	ActorID      string `json:"actor_id"`
+	PostID       string `json:"post_id"`
+	TargetUserID string `json:"target_user_id"`
 }
 
 type CommentLiked struct {
-	UserID    string `json:"user_id"`
-	CommentID string `json:"comment_id"`
+	ActorID      string `json:"actor_id"`
+	CommentID    string `json:"comment_id"`
+	TargetUserID string `json:"target_user_id"`
 }

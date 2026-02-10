@@ -20,7 +20,10 @@ replace github.com/KaminurOrynbek/BiznesAsh/PaymentService => ../PaymentService
 
 replace github.com/KaminurOrynbek/BiznesAsh/ConsultationService => ../ConsultationService
 
+replace github.com/KaminurOrynbek/BiznesAsh_lib => ../../BiznesAsh_lib
+
 require (
+	github.com/KaminurOrynbek/BiznesAsh v0.0.0
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.13.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
@@ -51,7 +54,9 @@ require (
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/KaminurOrynbek/BiznesAsh => ../ContentService

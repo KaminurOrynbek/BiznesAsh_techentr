@@ -42,3 +42,11 @@ func (r *commentRepositoryImpl) ListByPostID(ctx context.Context, postID string)
 	}
 	return entityComments, nil
 }
+
+func (r *commentRepositoryImpl) GetByID(ctx context.Context, id string) (*entity.Comment, error) {
+	modelComment, err := r.dao.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return modelComment.ToEntity(), nil
+}

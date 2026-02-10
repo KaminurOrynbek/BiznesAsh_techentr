@@ -4,6 +4,7 @@ import { Navbar, Loading, Alert, Button, Input } from "../components";
 import type { User as UserType } from "../services/authService";
 import { authService } from "../services/authService";
 import apiClient from "../services/api";
+import { useAuth } from "../context/useAuth";
 import {
   User,
   Settings,
@@ -20,6 +21,7 @@ import {
 export const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
 
   const [user, setUser] = useState<UserType | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
@@ -36,34 +38,60 @@ export const ProfilePage = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [userId, authUser]);
 
   const fetchData = async () => {
+    // If authUser is not loaded yet, wait or handle it? 
+    // Actually authUser might be null if not logged in.
+    // But this page is protected route usually.
+
     setIsLoading(true);
     setError("");
     try {
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
-      setUsername(userData.username ?? "");
-      setEmail(userData.email ?? "");
+      // Determine if viewing own profile
+      // If no userId param, it's own profile (default /profile route)
+      // If userId param matches authUser.id, it's own profile
+      const isOwnProfile = !userId || (authUser && userId === authUser.id);
 
-      // Fetch Subscription
-      try {
-        const subResp = await apiClient.get(`/api/v1/subscriptions/${userData.id}`);
-        setSubscription(subResp.data);
-      } catch (e) {
-        console.log("No active subscription");
+      let targetUser: UserType;
+
+      if (isOwnProfile) {
+        if (!authUser) {
+          // Should not happen in protected route, but safety check
+          // Try to fetch current user if authUser is stale/null?
+          targetUser = await authService.getCurrentUser();
+        } else {
+          targetUser = authUser;
+        }
+      } else {
+        targetUser = await authService.getUserById(userId!);
       }
 
-      // Fetch Bookings
-      try {
-        const bookResp = await apiClient.get(`/api/v1/consultations/user/${userData.id}`);
-        setBookings(bookResp.data || []);
-      } catch (e) {
-        console.log("No bookings found");
+      setUser(targetUser);
+      setUsername(targetUser.username ?? "");
+      setEmail(targetUser.email ?? "");
+
+      // Fetch Subscriptions & Bookings ONLY if it's own profile (these are private)
+      if (isOwnProfile) {
+        try {
+          const subResp = await apiClient.get(`/api/v1/subscriptions/${targetUser.id}`);
+          setSubscription(subResp.data);
+        } catch (e) {
+          console.log("No active subscription");
+        }
+
+        try {
+          const bookResp = await apiClient.get(`/api/v1/consultations/user/${targetUser.id}`);
+          setBookings(bookResp.data || []);
+        } catch (e) {
+          console.log("No bookings found");
+        }
+      } else {
+        setSubscription(null);
+        setBookings([]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load dashboard");
+      setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
       setIsLoading(false);
     }
@@ -119,6 +147,9 @@ export const ProfilePage = () => {
 
   if (isLoading) return <><Navbar /><div className="min-h-screen bg-[#0f172a] pt-20"><Loading /></div></>;
 
+  // Check if viewing own profile for render
+  const isOwnProfile = !userId || (authUser && user?.id === authUser.id);
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-white">
       <Navbar />
@@ -135,24 +166,30 @@ export const ProfilePage = () => {
                 }`}
             >
               <User size={20} />
-              <span className="font-medium">Account Settings</span>
+              <span className="font-medium">Profile Details</span>
             </button>
-            <button
-              onClick={() => setActiveTab("subscription")}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === "subscription" ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "text-gray-400 hover:bg-white/5"
-                }`}
-            >
-              <CreditCard size={20} />
-              <span className="font-medium">My Subscription</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("bookings")}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === "bookings" ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "text-gray-400 hover:bg-white/5"
-                }`}
-            >
-              <Calendar size={20} />
-              <span className="font-medium">Consultations</span>
-            </button>
+
+            {/* Only show these if viewing own profile */}
+            {isOwnProfile && (
+              <>
+                <button
+                  onClick={() => setActiveTab("subscription")}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === "subscription" ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "text-gray-400 hover:bg-white/5"
+                    }`}
+                >
+                  <CreditCard size={20} />
+                  <span className="font-medium">My Subscription</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("bookings")}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${activeTab === "bookings" ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "text-gray-400 hover:bg-white/5"
+                    }`}
+                >
+                  <Calendar size={20} />
+                  <span className="font-medium">Consultations</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* Main Content */}
@@ -166,7 +203,7 @@ export const ProfilePage = () => {
                     </h2>
                     <p className="text-gray-400 text-sm mt-1">Manage your personal information and security</p>
                   </div>
-                  {!isEditing && (
+                  {!isEditing && isOwnProfile && (
                     <Button variant="secondary" onClick={() => setIsEditing(true)}>
                       Edit Profile
                     </Button>

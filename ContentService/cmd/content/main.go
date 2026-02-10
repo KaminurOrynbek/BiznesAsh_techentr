@@ -49,12 +49,10 @@ func main() {
 		log.Fatalf("Failed to connect to Postgres: %v", err)
 	}
 
-	
 	defer db.Close()
 
 	cwd, _ := os.Getwd()
 	log.Printf("CWD=%s\n", cwd)
-
 
 	log.Println("Successfully connected to Postgres!")
 
@@ -63,12 +61,11 @@ func main() {
 	var searchPath string
 	var regclass *string
 
-
 	if err := db.Get(&dbName, "select current_database()"); err != nil {
-	log.Fatalf("failed to read current_database: %v", err)
+		log.Fatalf("failed to read current_database: %v", err)
 	}
 	if err := db.Get(&searchPath, "show search_path"); err != nil {
-	log.Fatalf("failed to read search_path: %v", err)
+		log.Fatalf("failed to read search_path: %v", err)
 	}
 
 	if err := db.Get(&regclass, "select to_regclass('public.posts')"); err != nil {
@@ -88,7 +85,7 @@ func main() {
 	// 4. Init DAOs
 	postDAO := dao.NewPostDAO(db)
 	commentDAO := dao.NewCommentDAO(db)
-	likeDAO := dao.NewLikeDAO(db)
+	likeDAO := dao.NewLikeDao(db)
 
 	// 5. Init Repositories
 	postRepo := repoimpl.NewPostRepository(postDAO)
@@ -97,7 +94,6 @@ func main() {
 
 	// 6. Init Usecases
 	postUsecase := usecaseimpl.NewPostUsecase(postRepo, commentRepo, likeRepo)
-	commentUsecase := usecaseimpl.NewCommentUsecase(commentRepo)
 
 	// nats config (MOVED BEFORE using contentPublisher)
 	natsConfig := natscfg.LoadNatsConfig()
@@ -106,12 +102,12 @@ func main() {
 
 	contentPublisher := publisher.NewContentPublisher(natsQueue)
 
-	likeUsecase := usecaseimpl.NewLikeUsecase(likeRepo, contentPublisher)
+	commentUsecase := usecaseimpl.NewCommentUsecase(commentRepo, postRepo, likeRepo, contentPublisher)
 
 	defer natsConn.Close()
 
 	// 7. Init gRPC handler
-	contentHandler := handler.NewContentHandler(postUsecase, commentUsecase, likeUsecase)
+	contentHandler := handler.NewContentHandler(postUsecase, commentUsecase, likeRepo)
 
 	// 8. Start gRPC server
 	port := os.Getenv("GRPC_PORT")
@@ -128,7 +124,6 @@ func main() {
 	pb.RegisterContentServiceServer(s, contentHandler)
 
 	log.Printf("ENV GRPC_PORT=%q\n", os.Getenv("GRPC_PORT"))
-
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)

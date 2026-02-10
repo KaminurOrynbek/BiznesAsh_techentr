@@ -8,11 +8,13 @@ import (
 
 func ConvertCommentToPB(c *entity.Comment) *pb.Comment {
 	return &pb.Comment{
-		Id:        c.ID,
-		PostId:    c.PostID,
-		AuthorId:  c.AuthorID,
-		Content:   c.Content,
-		CreatedAt: timestamppb.New(c.CreatedAt),
-		UpdatedAt: timestamppb.New(c.UpdatedAt),
+		Id:         c.ID,
+		PostId:     c.PostID,
+		AuthorId:   c.AuthorID,
+		Content:    c.Content,
+		CreatedAt:  timestamppb.New(c.CreatedAt),
+		UpdatedAt:  timestamppb.New(c.UpdatedAt),
+		Liked:      c.Liked,
+		LikesCount: c.LikesCount,
 	}
 }

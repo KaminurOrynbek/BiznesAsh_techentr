@@ -1,13 +1,9 @@
 import type { ReactNode } from 'react';
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
-  type?: 'button' | 'submit' | 'reset';
 }
 
 export const Button = ({
@@ -18,6 +14,7 @@ export const Button = ({
   variant = 'primary',
   size = 'md',
   type = 'button',
+  ...rest
 }: ButtonProps) => {
   const baseStyles = 'font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
 
@@ -40,6 +37,7 @@ export const Button = ({
       onClick={onClick}
       disabled={disabled}
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      {...rest}
     >
       {children}
     </button>

@@ -43,7 +43,8 @@ export const RegisterPage = () => {
 
     try {
       await register(username, email, password);
-      navigate("/feed");
+      // Redirect to verification with email state
+      navigate("/verify-email", { state: { email } });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
     } finally {

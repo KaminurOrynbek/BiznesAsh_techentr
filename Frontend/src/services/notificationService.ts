@@ -3,11 +3,15 @@ import apiClient from './api';
 export interface Notification {
   id: string;
   userId: string;
-  type: 'comment' | 'like' | 'mention' | 'subscription';
+  actorId: string;
+  actorUsername: string;
+  type: 'COMMENT' | 'POST_LIKE' | 'COMMENT_LIKE' | 'NEW_POST' | 'POST_UPDATE' | 'REPORT' | 'WELCOME' | 'SYSTEM';
   message: string;
-  read: boolean;
+  postId?: string;
+  commentId?: string;
+  isRead: boolean;
   createdAt: string;
-  data?: Record<string, unknown>;
+  metadata?: Record<string, any>;
 }
 
 export interface EmailVerification {
@@ -17,11 +21,19 @@ export interface EmailVerification {
 }
 
 export const notificationService = {
-  getNotifications: async (unreadOnly = false): Promise<Notification[]> => {
-    const response = await apiClient.get<Notification[]>('/notifications', {
-      params: { unreadOnly },
+  getNotifications: async (userId: string, unreadOnly = false): Promise<Notification[]> => {
+    const response = await apiClient.get<any[]>('/notifications', {
+      params: { userId, unreadOnly },
     });
-    return response.data;
+
+    return response.data.map(n => ({
+      ...n,
+      actorId: n.actorId || n.data?.actor_id || n.data?.actorId,
+      actorUsername: n.actorUsername || n.data?.actor_username || n.data?.actorUsername,
+      postId: n.postId || n.data?.post_id || n.data?.postId,
+      commentId: n.commentId || n.data?.comment_id || n.data?.commentId,
+      metadata: n.metadata || (n.data?.metadata ? JSON.parse(n.data.metadata) : n.metadata)
+    }));
   },
 
   markAsRead: async (notificationId: string): Promise<Notification> => {
@@ -47,15 +59,15 @@ export const notificationService = {
     await apiClient.post('/notifications/subscribe', subscriptionData);
   },
 
-  verifyEmail: async (email: string, token: string): Promise<EmailVerification> => {
-    const response = await apiClient.post<EmailVerification>(
-      '/verify-email',
-      { email, token }
+  verifyEmail: async (email: string, code: string): Promise<any> => {
+    const response = await apiClient.post<any>(
+      '/auth/verify-email',
+      { email, code }
     );
     return response.data;
   },
 
   resendVerificationEmail: async (email: string): Promise<void> => {
-    await apiClient.post('/resend-verification', { email });
+    await apiClient.post('/auth/resend-code', { email });
   },
 };

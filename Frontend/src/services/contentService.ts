@@ -8,8 +8,7 @@ export interface Post {
   commentsCount: number;
   createdAt: string;
   updatedAt: string;
-
-  // Optional fields (if backend later starts returning them)
+  liked: boolean;
   authorUsername?: string;
 }
 
@@ -20,8 +19,12 @@ export interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
+  liked: boolean;
+  likesCount: number;
   authorUsername?: string;
 }
+
+// ... (CreatePostRequest... constants ... normalizeDate ... normalizePost ...)
 
 export interface CreatePostRequest {
   content: string;
@@ -55,10 +58,6 @@ function normalizeDate(raw: unknown): string {
 
 /**
  * Normalize API response to Post
- * Backend may return:
- * - { post: {...} }
- * - {...}
- * - snake_case fields
  */
 function normalizePost(raw: unknown): Post {
   const obj = (raw ?? {}) as Record<string, unknown>;
@@ -71,6 +70,7 @@ function normalizePost(raw: unknown): Post {
   const commentsCount = Number(p.commentsCount ?? p.comments_count ?? 0);
   const createdAt = normalizeDate(p.createdAt ?? p.created_at);
   const updatedAt = normalizeDate(p.updatedAt ?? p.updated_at);
+  const liked = Boolean(p.liked ?? false);
 
   // Optional author username (if exists in payload)
   const authorUsername =
@@ -88,6 +88,7 @@ function normalizePost(raw: unknown): Post {
     commentsCount: Number.isFinite(commentsCount) ? commentsCount : 0,
     createdAt,
     updatedAt,
+    liked,
     ...(authorUsername ? { authorUsername } : {}),
   };
 }
@@ -106,6 +107,8 @@ function normalizeComment(raw: unknown): Comment {
         ? c.author_username
         : undefined;
 
+  const likesCount = Number(c.likesCount ?? c.likes_count ?? 0);
+
   return {
     id: String(c.id ?? ""),
     postId: String(c.postId ?? c.post_id ?? ""),
@@ -113,6 +116,8 @@ function normalizeComment(raw: unknown): Comment {
     content: String(c.content ?? ""),
     createdAt: normalizeDate(c.createdAt ?? c.created_at),
     updatedAt: normalizeDate(c.updatedAt ?? c.updated_at),
+    liked: Boolean(c.liked ?? false),
+    likesCount: Number.isFinite(likesCount) ? likesCount : 0,
     ...(authorUsername ? { authorUsername } : {}),
   };
 }
@@ -125,10 +130,6 @@ export const contentService = {
 
     const data = response.data;
 
-    // possible shapes:
-    // - Post[]
-    // - { posts: Post[] }
-    // - { posts: unknown[] }
     if (Array.isArray(data)) {
       return data.map((item) => normalizePost(item));
     }
@@ -189,13 +190,23 @@ export const contentService = {
     await apiClient.delete(`${CONTENT_PREFIX}/comments/${commentId}`);
   },
 
-  likePost: async (postId: string): Promise<Post> => {
-    const response = await apiClient.post<unknown>(`${CONTENT_PREFIX}/posts/${postId}/like`);
-    return normalizePost(response.data);
+  likePost: async (postId: string): Promise<number> => {
+    const response = await apiClient.post<{ likesCount: number }>(`${CONTENT_PREFIX}/posts/${postId}/like`);
+    return response.data.likesCount;
   },
 
-  unlikePost: async (postId: string): Promise<Post> => {
-    const response = await apiClient.post<unknown>(`${CONTENT_PREFIX}/posts/${postId}/unlike`);
-    return normalizePost(response.data);
+  unlikePost: async (postId: string): Promise<number> => {
+    const response = await apiClient.delete<{ likesCount: number }>(`${CONTENT_PREFIX}/posts/${postId}/like`);
+    return response.data.likesCount;
+  },
+
+  likeComment: async (commentId: string): Promise<number> => {
+    const response = await apiClient.post<{ likesCount: number }>(`${CONTENT_PREFIX}/comments/${commentId}/like`);
+    return response.data.likesCount;
+  },
+
+  unlikeComment: async (commentId: string): Promise<number> => {
+    const response = await apiClient.delete<{ likesCount: number }>(`${CONTENT_PREFIX}/comments/${commentId}/like`);
+    return response.data.likesCount;
   },
 };

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	handler "github.com/KaminurOrynbek/BiznesAsh/APIGateway/handler"
-	contentpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/content"
+	contentpb "github.com/KaminurOrynbek/BiznesAsh/auto-proto/content"
 	notificationpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/notification"
 	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
 

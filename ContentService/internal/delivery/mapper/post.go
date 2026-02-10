@@ -26,5 +26,6 @@ func ConvertPostToPB(p *entity.Post) *pb.Post {
 		UpdatedAt:     p.UpdatedAt.Format(time.RFC3339),
 		CommentsCount: p.CommentsCount,
 		Comments:      pbComments,
+		Liked:         p.Liked,
 	}
 }

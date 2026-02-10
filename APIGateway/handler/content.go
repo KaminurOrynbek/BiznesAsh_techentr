@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	contentpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/content"
+	contentpb "github.com/KaminurOrynbek/BiznesAsh/auto-proto/content"
 	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/metadata"
@@ -31,19 +31,20 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 			limit = 100
 		}
 		page := skip/limit + 1
+		userID := getCurrentUserID(c, userClient)
+
 		resp, err := contentClient.ListPosts(context.Background(), &contentpb.ListPostsRequest{
-			Page:  int32(page),
-			Limit: int32(limit),
+			Page:   int32(page),
+			Limit:  int32(limit),
+			UserId: userID,
 		})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		// Return posts array so frontend gets [ { id, content, ... }, ... ]
 		posts := resp.GetPosts()
 		authorMap := fetchUsernames(posts, nil, userClient)
 
-		// Map to a structure including author name
 		var enriched []gin.H
 		for _, p := range posts {
 			enriched = append(enriched, gin.H{
@@ -55,6 +56,7 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 				"commentsCount":  p.GetCommentsCount(),
 				"createdAt":      p.GetCreatedAt(),
 				"updatedAt":      p.GetUpdatedAt(),
+				"liked":          p.GetLiked(),
 			})
 		}
 		c.JSON(http.StatusOK, enriched)
@@ -62,7 +64,8 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 
 	content.GET("/posts/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		resp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: id})
+		userID := getCurrentUserID(c, userClient)
+		resp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: id, UserId: userID})
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
@@ -81,16 +84,25 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 			"commentsCount":  p.GetCommentsCount(),
 			"createdAt":      p.GetCreatedAt(),
 			"updatedAt":      p.GetUpdatedAt(),
+			"liked":          p.GetLiked(),
 		})
 	})
 
+	// Legacy Like support
 	content.POST("/posts/:id/like", likePostHandler(contentClient, userClient))
-	content.POST("/posts/:id/unlike", dislikePostHandler(contentClient, userClient))
+	content.DELETE("/posts/:id/like", unlikePostHandler(contentClient, userClient))
+
+	// Legacy Like Comment support
+	content.POST("/comments/:id/like", likeCommentHandler(contentClient, userClient))
+	content.DELETE("/comments/:id/like", unlikeCommentHandler(contentClient, userClient))
 
 	// Comment routes
 	content.POST("/posts/:id/comments", createCommentHandler(contentClient, userClient))
 	content.GET("/posts/:id/comments", listCommentsHandler(contentClient, userClient))
 	content.DELETE("/comments/:id", deleteCommentHandler(contentClient, userClient))
+
+	// Post Management
+	content.DELETE("/posts/:id", deletePostHandler(contentClient, userClient))
 }
 
 // func createPostHandler(client contentpb.ContentServiceClient) gin.HandlerFunc {
@@ -112,39 +124,38 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 
 func createPostHandler(client contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
-	  var req contentpb.CreatePostRequest
-	  if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	  }
-  
-	  // get current user id from token
-	  userID := getCurrentUserID(c, userClient)
-	  if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
-		return
-	  }
-  
-	  req.AuthorId = userID
-  
-	  resp, err := client.CreatePost(context.Background(), &req)
-	  if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	  }
-  
-	  p := resp.GetPost()
-	  u, _ := userClient.GetUser(context.Background(), &userpb.GetUserRequest{UserId: p.GetAuthorId()})
-	  c.JSON(http.StatusOK, gin.H{
-		"id":             p.GetId(),
-		"content":        p.GetContent(),
-		"authorId":       p.GetAuthorId(),
-		"authorUsername": u.GetUsername(),
-		"createdAt":      p.GetCreatedAt(),
-	  })
+		var req contentpb.CreatePostRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// get current user id from token
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+
+		req.AuthorId = userID
+
+		resp, err := client.CreatePost(context.Background(), &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		p := resp.GetPost()
+		u, _ := userClient.GetUser(context.Background(), &userpb.GetUserRequest{UserId: p.GetAuthorId()})
+		c.JSON(http.StatusOK, gin.H{
+			"id":             p.GetId(),
+			"content":        p.GetContent(),
+			"authorId":       p.GetAuthorId(),
+			"authorUsername": u.GetUsername(),
+			"createdAt":      p.GetCreatedAt(),
+		})
 	}
-  }
-  
+}
 
 // getCurrentUserID returns the current user's ID from the Authorization header, or empty string if missing/invalid.
 func getCurrentUserID(c *gin.Context, userClient userpb.UserServiceClient) string {
@@ -160,62 +171,33 @@ func getCurrentUserID(c *gin.Context, userClient userpb.UserServiceClient) strin
 	return resp.GetUserId()
 }
 
-func likePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+func deletePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postID := c.Param("id")
-		if postID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "post id required"})
-			return
-		}
 		userID := getCurrentUserID(c, userClient)
 		if userID == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required to like a post"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
 			return
 		}
-		_, err := contentClient.LikePost(context.Background(), &contentpb.LikePostRequest{
-			PostId: postID,
-			UserId: userID,
-		})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		// Return updated post so frontend can replace list item
-		postResp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: postID})
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"likesCount": 0})
-			return
-		}
-		c.JSON(http.StatusOK, postResp.GetPost())
-	}
-}
 
-func dislikePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		postID := c.Param("id")
-		if postID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "post id required"})
+		resp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: postID})
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
 			return
 		}
-		userID := getCurrentUserID(c, userClient)
-		if userID == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required to unlike a post"})
+
+		if resp.GetPost().GetAuthorId() != userID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "you can only delete your own posts"})
 			return
 		}
-		_, err := contentClient.DislikePost(context.Background(), &contentpb.DislikePostRequest{
-			PostId: postID,
-			UserId: userID,
-		})
+
+		_, err = contentClient.DeletePost(context.Background(), &contentpb.PostIdRequest{Id: postID})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		postResp, err := contentClient.GetPost(context.Background(), &contentpb.PostIdRequest{Id: postID})
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"dislikesCount": 0})
-			return
-		}
-		c.JSON(http.StatusOK, postResp.GetPost())
+
+		c.JSON(http.StatusOK, gin.H{"message": "post deleted successfully"})
 	}
 }
 
@@ -227,8 +209,6 @@ func deleteCommentHandler(contentClient contentpb.ContentServiceClient, userClie
 			return
 		}
 
-		// Optional: verify authorship before deleting if backend doesn't handle it
-		// For now we pass to backend
 		_, err := contentClient.DeleteComment(context.Background(), &contentpb.CommentIdRequest{Id: commentID})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -270,7 +250,8 @@ func createCommentHandler(client contentpb.ContentServiceClient, userClient user
 func listCommentsHandler(client contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postID := c.Param("id")
-		resp, err := client.ListComments(context.Background(), &contentpb.ListCommentsRequest{PostId: postID})
+		userID := getCurrentUserID(c, userClient)
+		resp, err := client.ListComments(context.Background(), &contentpb.ListCommentsRequest{PostId: postID, UserId: userID})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -289,6 +270,8 @@ func listCommentsHandler(client contentpb.ContentServiceClient, userClient userp
 				"content":        com.GetContent(),
 				"createdAt":      com.GetCreatedAt(),
 				"updatedAt":      com.GetUpdatedAt(),
+				"liked":          com.GetLiked(),
+				"likesCount":     com.GetLikesCount(),
 			})
 		}
 
@@ -334,4 +317,84 @@ func parseIntDefault(s string, defaultVal int) (int, bool) {
 		return defaultVal, false
 	}
 	return n, true
+}
+
+func likePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+		resp, err := contentClient.LikePost(context.Background(), &contentpb.LikePostRequest{
+			PostId: postID,
+			UserId: userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"likesCount": resp.GetLikesCount()})
+	}
+}
+
+func unlikePostHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+		resp, err := contentClient.UnlikePost(context.Background(), &contentpb.UnlikePostRequest{
+			PostId: postID,
+			UserId: userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"likesCount": resp.GetLikesCount()})
+	}
+}
+
+func likeCommentHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		commentID := c.Param("id")
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+		resp, err := contentClient.LikeComment(context.Background(), &contentpb.LikeCommentRequest{
+			CommentId: commentID,
+			UserId:    userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"likesCount": resp.GetLikesCount()})
+	}
+}
+
+func unlikeCommentHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		commentID := c.Param("id")
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+		resp, err := contentClient.UnlikeComment(context.Background(), &contentpb.UnlikeCommentRequest{
+			CommentId: commentID,
+			UserId:    userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"likesCount": resp.GetLikesCount()})
+	}
 }
