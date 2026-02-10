@@ -21,15 +21,15 @@ Order matters slightly (Gateway last).
     ```
 4.  **Subscription Service** (NEW!):
     ```bash
-    cd SubscriptionService && go run cmd/subscription/main.go
+    cd SubscriptionService && go run cmd/main.go
     ```
 5.  **Payment Service** (NEW!):
     ```bash
-    cd PaymentService && go run cmd/payment/main.go
+    cd PaymentService && go run cmd/main.go
     ```
 6.  **Consultation Service** (NEW!):
     ```bash
-    cd ConsultationService && go run cmd/consultation/main.go
+    cd ConsultationService && go run cmd/main.go
     ```
 7.  **API Gateway** (Restart this!):
     ```bash
