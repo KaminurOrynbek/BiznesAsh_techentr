@@ -30,7 +30,7 @@ type Chapter = {
 };
 
 const Pill = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+  <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 text-xs font-semibold border border-transparent dark:border-slate-700">
     {children}
   </span>
 );
@@ -38,20 +38,20 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
 const DocRow = ({ name, desc }: { name: string; desc: string }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
       <div className="flex items-center gap-3">
-        <div className="h-8 w-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
+        <div className="h-8 w-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center">
           <FileText className="h-4 w-4 text-slate-400" />
         </div>
         <div>
-          <div className="font-semibold text-slate-900 text-sm">{name}</div>
-          <div className="text-xs text-slate-500">{desc}</div>
+          <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{name}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">{desc}</div>
         </div>
       </div>
 
       <button
         type="button"
-        className="h-9 w-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition"
+        className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition"
         aria-label={t('download', { defaultValue: 'Download' })}
         title={t('downloadPlaceholder', { defaultValue: 'Download (placeholder)' })}
       >
@@ -73,19 +73,19 @@ const AccordionItem = ({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition"
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
       >
-        <span className="font-semibold text-slate-900">{title}</span>
+        <span className="font-semibold text-slate-900 dark:text-slate-100">{title}</span>
         <ChevronDown
           className={`h-4 w-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
 
-      {open && <div className="px-4 pb-4 text-sm text-slate-700">{children}</div>}
+      {open && <div className="px-4 pb-4 text-sm text-slate-700 dark:text-slate-300">{children}</div>}
     </div>
   );
 };
@@ -101,20 +101,20 @@ export const HandbookPage = () => {
         render: () => (
           <div className="space-y-8">
             <div>
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-3">
+              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3 transition-colors">
                 {t('step1Legal')}
               </h2>
-              <p className="text-slate-700 mb-4">
+              <p className="text-slate-700 dark:text-slate-400 mb-4 transition-colors">
                 {t('decideLegal')}
               </p>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <Card className="p-0">
+                <Card className="p-0 overflow-hidden">
                   <div className="p-5">
-                    <div className="font-bold text-slate-900 mb-2">
+                    <div className="font-bold text-slate-900 dark:text-white mb-2 transition-colors">
                       {t('ieTitle')}
                     </div>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600">
+                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                       <li>{t('ieSimpler')}</li>
                       <li>{t('ieLowerFines')}</li>
                       <li>{t('ieLiability')}</li>
@@ -123,12 +123,12 @@ export const HandbookPage = () => {
                   </div>
                 </Card>
 
-                <Card className="p-0">
+                <Card className="p-0 overflow-hidden">
                   <div className="p-5">
-                    <div className="font-bold text-slate-900 mb-2">
+                    <div className="font-bold text-slate-900 dark:text-white mb-2 transition-colors">
                       {t('llpTitle')}
                     </div>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600">
+                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                       <li>{t('llpSeparate')}</li>
                       <li>{t('llpLimited')}</li>
                       <li>{t('llpReporting')}</li>
@@ -139,17 +139,17 @@ export const HandbookPage = () => {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-200">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-3">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3 transition-colors">
                 {t('step2Register')}
               </h2>
-              <p className="text-slate-700 mb-4">
+              <p className="text-slate-700 dark:text-slate-400 mb-4 transition-colors">
                 {t('egovNotice')}
               </p>
 
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <div className="font-bold text-blue-900 mb-2">{t('requiredEgov')}</div>
-                <ul className="list-disc pl-5 space-y-1 text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 transition-colors">
+                <div className="font-bold text-blue-900 dark:text-blue-300 mb-2">{t('requiredEgov')}</div>
+                <ul className="list-disc pl-5 space-y-1 text-sm text-blue-800 dark:text-blue-400/90">
                   <li>{t('validEds')}</li>
                   <li>{t('registeredPhone')}</li>
                 </ul>
@@ -164,8 +164,8 @@ export const HandbookPage = () => {
         icon: FileText,
         render: () => (
           <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900">{t('docChecklist')}</h2>
-            <p className="text-slate-700">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('docChecklist')}</h2>
+            <p className="text-slate-700 dark:text-slate-400 transition-colors">
               {t('prepareDocs')}
             </p>
 
@@ -192,7 +192,7 @@ export const HandbookPage = () => {
         icon: Globe,
         render: () => (
           <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900">{t('digitalEcosystem')}</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('digitalEcosystem')}</h2>
 
             <div className="grid gap-3">
               {[
@@ -204,16 +204,16 @@ export const HandbookPage = () => {
                 <a
                   key={site.name}
                   href="#"
-                  className="block group rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow"
+                  className="block group rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="p-4 flex items-center justify-between">
                     <div>
-                      <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {site.name}
                       </div>
-                      <div className="text-sm text-slate-500">{site.desc}</div>
+                      <div className="text-sm text-slate-500 dark:text-slate-400">{site.desc}</div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-blue-600" />
+                    <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
                   </div>
                 </a>
               ))}
@@ -227,8 +227,8 @@ export const HandbookPage = () => {
         icon: DollarSign,
         render: () => (
           <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900">{t('understandingTaxes')}</h2>
-            <p className="text-slate-700">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('understandingTaxes')}</h2>
+            <p className="text-slate-700 dark:text-slate-400 transition-colors">
               {t('taxRegimeText')}
             </p>
 
@@ -254,7 +254,7 @@ export const HandbookPage = () => {
         icon: HelpCircle,
         render: () => (
           <div className="space-y-5">
-            <h2 className="text-2xl font-extrabold text-slate-900">{t('avoidMistakes')}</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('avoidMistakes')}</h2>
 
             {[
               {
@@ -272,10 +272,10 @@ export const HandbookPage = () => {
             ].map((item) => (
               <div
                 key={item.q}
-                className="rounded-2xl border border-orange-100 bg-orange-50/50 p-5"
+                className="rounded-2xl border border-orange-100 dark:border-orange-900/20 bg-orange-50/50 dark:bg-orange-900/10 p-5 transition-colors"
               >
-                <div className="font-bold text-orange-900 mb-2">{item.q}</div>
-                <div className="text-sm text-slate-700">{item.a}</div>
+                <div className="font-bold text-orange-900 dark:text-orange-300 mb-2 transition-colors">{item.q}</div>
+                <div className="text-sm text-slate-700 dark:text-slate-400 transition-colors">{item.a}</div>
               </div>
             ))}
           </div>
@@ -292,14 +292,14 @@ export const HandbookPage = () => {
     <>
       <Navbar />
 
-      <div className="bg-white min-h-[calc(100vh-64px)]">
+      <div className="bg-white dark:bg-slate-950 min-h-[calc(100vh-64px)] transition-colors">
         {/* Top banner */}
-        <div className="border-b border-slate-200 bg-slate-50 py-10">
+        <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 py-10">
           <div className="container-page">
-            <h1 className="text-4xl font-extrabold text-slate-900 mb-3">
+            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-3">
               {t('handbookTitle')}
             </h1>
-            <p className="text-lg text-slate-600 max-w-2xl">
+            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
               {t('handbookSubtitle')}
             </p>
           </div>
@@ -318,8 +318,8 @@ export const HandbookPage = () => {
                       key={c.id}
                       onClick={() => setActiveChapter(c.id)}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition ${isActive
-                          ? "bg-blue-50 text-blue-700 border border-blue-100"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
                         }`}
                       type="button"
                     >
@@ -335,12 +335,12 @@ export const HandbookPage = () => {
 
             {/* Content */}
             <div className="flex-1 min-h-[520px]">
-              <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+              <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors">
                 <div className="p-6 md:p-8">{active?.render()}</div>
 
                 {/* Bottom CTA row */}
-                <div className="border-t border-slate-100 p-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-slate-50/40">
-                  <div className="text-sm text-slate-600">
+                <div className="border-t border-slate-100 dark:border-slate-800 p-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-slate-50/40 dark:bg-slate-800/50 transition-colors">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
                     {t('nextHandbook')}
                   </div>
                   <Link to="/feed">

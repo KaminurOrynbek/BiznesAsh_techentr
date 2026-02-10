@@ -118,64 +118,68 @@ export const NotificationsPage: React.FC = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-2xl mx-auto py-8 px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Bell className="w-8 h-8 text-blue-600" />
-            {t('notificationsTitle')}
-          </h1>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 flex items-center gap-2 border border-red-100">
-            <Info className="w-5 h-5" />
-            {error}
+      <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors">
+        <div className="max-w-2xl mx-auto py-8 px-4">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3 transition-colors">
+              <Bell className="w-8 h-8 text-blue-600" />
+              {t('notificationsTitle')}
+            </h1>
           </div>
-        )}
 
-        {notifications.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-8 h-8 text-gray-400" />
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 flex items-center gap-2 border border-red-100 dark:border-red-900/30">
+              <Info className="w-5 h-5" />
+              {error}
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('noNotificationsYet')}</h2>
-            <p className="text-gray-500">{t('letYouKnow')}</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`group bg-white rounded-2xl p-4 shadow-sm border-2 transition-all cursor-pointer hover:shadow-md hover:border-blue-100 flex items-start gap-4 ${notification.isRead ? 'border-transparent opacity-80' : 'border-blue-500 ring-4 ring-blue-50'
-                  }`}
-              >
-                <div className={`p-3 rounded-xl transition-colors ${notification.isRead ? 'bg-gray-100' : 'bg-blue-600 shadow-lg shadow-blue-200'
-                  }`}>
-                  {React.cloneElement(getNotificationIcon(notification.type) as React.ReactElement<any>, {
-                    className: `w-6 h-6 ${notification.isRead ? 'text-gray-500' : 'text-white'}`
-                  })}
-                </div>
+          )}
 
-                <div className="flex-1 min-w-0">
-                  <div className="text-gray-900 leading-snug mb-1 text-lg">
-                    {getNotificationMessage(notification)}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {format(new Date(notification.createdAt), 'dd.MM.yyyy HH:mm')}
-                  </div>
-                </div>
-
-                {!notification.isRead && (
-                  <div className="w-3 h-3 bg-blue-600 rounded-full mt-2" />
-                )}
-
-                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors mt-2" />
+          {notifications.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-12 text-center transition-colors">
+              <div className="bg-slate-50 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bell className="w-8 h-8 text-slate-400 dark:text-slate-500" />
               </div>
-            ))}
-          </div>
-        )}
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">{t('noNotificationsYet')}</h2>
+              <p className="text-slate-500 dark:text-slate-400">{t('letYouKnow')}</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`group bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border-2 transition-all cursor-pointer hover:shadow-md ${notification.isRead
+                      ? 'border-transparent opacity-80'
+                      : 'border-blue-500 dark:border-blue-500 ring-4 ring-blue-50 dark:ring-blue-900/20'
+                    } hover:border-blue-100 dark:hover:border-blue-900/50 flex items-start gap-4`}
+                >
+                  <div className={`p-3 rounded-xl transition-colors ${notification.isRead ? 'bg-slate-100 dark:bg-slate-800' : 'bg-blue-600 shadow-lg shadow-blue-200 dark:shadow-blue-900/30'
+                    }`}>
+                    {React.cloneElement(getNotificationIcon(notification.type) as React.ReactElement<any>, {
+                      className: `w-6 h-6 ${notification.isRead ? 'text-slate-500 dark:text-slate-400' : 'text-white'}`
+                    })}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="text-slate-900 dark:text-slate-100 leading-snug mb-1 text-lg transition-colors">
+                      {getNotificationMessage(notification)}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {format(new Date(notification.createdAt), 'dd.MM.yyyy HH:mm')}
+                    </div>
+                  </div>
+
+                  {!notification.isRead && (
+                    <div className="w-3 h-3 bg-blue-600 rounded-full mt-2" />
+                  )}
+
+                  <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors mt-2" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

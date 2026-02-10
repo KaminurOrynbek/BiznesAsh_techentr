@@ -2,32 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.75rem;
+
+  /* Legacy aliases for my custom components */
+  --card-rgb: 255, 255, 255;
+  --card-border-rgb: 241, 245, 249;
+  --text-muted-rgb: 71, 85, 105;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+
+  /* Legacy aliases for my custom components */
+  --card-rgb: 15, 23, 42;
+  --card-border-rgb: 30, 41, 59;
+  --text-muted-rgb: 148, 163, 184;
+}
+
 /* Reset */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body, #root { height: 100%; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: rgb(248, 250, 252); /* slate-50 */
-  color: rgb(15, 23, 42);         /* slate-900 */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 /* Layout helpers */
-.container-page { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+.container-page {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+}
 
-.glass { @apply bg-white/75 backdrop-blur border border-white/60 shadow-soft rounded-xl2; }
-.card  { @apply bg-white border border-slate-100 shadow-sm rounded-xl2; }
+.glass {
+  background: hsla(var(--card), 0.75);
+  @apply backdrop-blur border shadow-soft rounded-xl2;
+  border-color: hsla(var(--border), 0.6);
+}
 
-.h1  { @apply text-3xl sm:text-5xl font-extrabold tracking-tight; }
-.sub { @apply text-slate-600 text-base sm:text-lg; }
+.dark .glass {
+  background: hsla(var(--card), 0.8);
+  border-color: hsla(var(--border), 0.5);
+}
 
-.btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold transition; }
-.btn-primary   { @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800; }
-.btn-secondary { @apply btn bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-700; }
-.btn-ghost     { @apply btn bg-transparent hover:bg-slate-100 text-slate-700; }
+.card {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  @apply border shadow-sm rounded-xl2;
+}
+
+.h1 {
+  @apply text-3xl sm:text-5xl font-extrabold tracking-tight;
+}
+
+.dark .h1 {
+  @apply text-foreground;
+}
+
+.sub {
+  color: hsl(var(--muted-foreground));
+  @apply text-base sm:text-lg;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold transition;
+}
+
+.btn-primary {
+  @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800;
+}
+
+.btn-secondary {
+  @apply btn bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200;
+}
+
+.btn-ghost {
+  @apply btn bg-transparent;
+  color: hsl(var(--muted-foreground));
+}
+
+.btn-ghost:hover {
+  @apply bg-slate-100 dark:bg-slate-800;
+}
 
 .input {
-  @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none
-  focus:border-brand-500 focus:ring-4 focus:ring-brand-100 transition;
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+  @apply w-full rounded-xl border px-4 py-3 outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100 dark:focus:ring-brand-900/20 transition;
 }
-.textarea { @apply input min-h-[120px] resize-none; }
+
+.textarea {
+  @apply input min-h-[120px] resize-none;
+}

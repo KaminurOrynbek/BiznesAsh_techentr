@@ -98,20 +98,20 @@ export const ExpertListingPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0f172a] text-white py-20 px-4">
+        <div className="min-h-screen bg-background text-foreground py-20 px-4 transition-colors">
             <div className="max-w-5xl mx-auto">
                 <div className="mb-12 flex flex-col gap-6">
                     <button
                         onClick={() => navigate('/feed')}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group self-start"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group self-start"
                     >
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                         <span className="font-semibold">{t('backToFeed')}</span>
                     </button>
 
                     <div>
-                        <h1 className="text-4xl font-extrabold mb-2">{t('expertConsultations')}</h1>
-                        <p className="text-slate-400 text-lg">
+                        <h1 className="text-4xl font-extrabold mb-2 text-foreground transition-colors">{t('expertConsultations')}</h1>
+                        <p className="text-muted-foreground text-lg transition-colors">
                             {t('expertConsultationsSubtitle')}
                         </p>
                     </div>
@@ -124,42 +124,42 @@ export const ExpertListingPage: React.FC = () => {
                             return (
                                 <div
                                     key={expert.id}
-                                    className={`bg-white/5 border rounded-3xl p-8 transition-all relative overflow-hidden ${current ? 'border-blue-500 shadow-xl shadow-blue-500/10' : 'border-white/10 hover:border-white/20'
+                                    className={`bg-card/50 border rounded-3xl p-8 transition-all relative overflow-hidden ${current ? 'border-blue-500 shadow-xl shadow-blue-500/10' : 'border-border hover:border-slate-300 dark:hover:border-white/20'
                                         }`}
                                 >
                                     <div className="flex flex-col md:flex-row gap-8 items-start">
                                         <img
                                             src={expert.image}
                                             alt={t(expert.nameKey)}
-                                            className="w-32 h-32 rounded-2xl object-cover ring-4 ring-white/5"
+                                            className="w-32 h-32 rounded-2xl object-cover ring-4 ring-muted/50 transition-all"
                                         />
 
                                         <div className="flex-grow">
                                             <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
-                                                <h3 className="text-2xl font-bold">{t(expert.nameKey)}</h3>
-                                                <div className="flex items-center text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-sm">
+                                                <h3 className="text-2xl font-bold text-foreground transition-colors">{t(expert.nameKey)}</h3>
+                                                <div className="flex items-center text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-sm transition-colors">
                                                     ★ <span>{expert.rating}</span>
                                                 </div>
                                             </div>
 
-                                            <div className="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                                            <div className="inline-block px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold uppercase tracking-wider mb-4 transition-colors">
                                                 {t(expert.specializationKey)}
                                             </div>
 
-                                            <p className="text-slate-400 leading-relaxed max-w-2xl mb-6">
+                                            <p className="text-muted-foreground leading-relaxed max-w-2xl mb-6 transition-colors">
                                                 {t(expert.bioKey)}
                                             </p>
 
                                             {/* Booking Section */}
                                             {active ? (
-                                                <div className="flex items-center gap-2 text-green-400 bg-green-400/10 w-fit px-4 py-3 rounded-xl border border-green-400/20">
+                                                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 w-fit px-4 py-3 rounded-xl border border-emerald-500/20 transition-colors">
                                                     <CheckCircle2 size={20} />
                                                     <span className="font-bold">{t('activeBookingNotice')}</span>
                                                 </div>
                                             ) : current ? (
-                                                <div className="space-y-6 pt-4 border-t border-white/5">
+                                                <div className="space-y-6 pt-4 border-t border-border transition-colors">
                                                     <div>
-                                                        <label className="text-sm font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
+                                                        <label className="text-sm font-bold text-muted-foreground uppercase flex items-center gap-2 mb-3">
                                                             <Calendar size={16} /> {t('selectDate')}
                                                         </label>
                                                         <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
@@ -169,7 +169,7 @@ export const ExpertListingPage: React.FC = () => {
                                                                     onClick={() => setSelectedDate(date)}
                                                                     className={`flex flex-col items-center p-2 rounded-xl transition-all border ${selectedDate?.toDateString() === date.toDateString()
                                                                         ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                                                        : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                                                                        : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
                                                                         }`}
                                                                 >
                                                                     <span className="text-[10px] uppercase font-bold opacity-60">
@@ -183,7 +183,7 @@ export const ExpertListingPage: React.FC = () => {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="text-sm font-bold text-slate-500 uppercase flex items-center gap-2 mb-3">
+                                                        <label className="text-sm font-bold text-muted-foreground uppercase flex items-center gap-2 mb-3 transition-colors">
                                                             <Clock size={16} /> {t('availableSlots')}
                                                         </label>
                                                         <div className="flex flex-wrap gap-3">
@@ -193,7 +193,7 @@ export const ExpertListingPage: React.FC = () => {
                                                                     onClick={() => setSelectedSlot(slot)}
                                                                     className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${selectedSlot === slot
                                                                         ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                                                        : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                                                                        : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
                                                                         }`}
                                                                 >
                                                                     {slot}
@@ -205,11 +205,11 @@ export const ExpertListingPage: React.FC = () => {
                                                         <Button
                                                             onClick={() => handleBook(expert)}
                                                             disabled={!selectedSlot || !selectedDate || isSubmitting !== null}
-                                                            className="flex-grow md:flex-none md:w-48"
+                                                            className="flex-grow md:flex-none md:w-48 bg-blue-600 hover:bg-blue-700 text-white"
                                                         >
                                                             {isSubmitting === expert.id ? t('confirming') : t('confirmBooking')}
                                                         </Button>
-                                                        <Button variant="secondary" onClick={() => {
+                                                        <Button variant="ghost" className="border border-border hover:bg-muted text-foreground" onClick={() => {
                                                             setSelectedExpert(null);
                                                             setSelectedDate(null);
                                                             setSelectedSlot(null);
@@ -217,12 +217,12 @@ export const ExpertListingPage: React.FC = () => {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/5 p-6 rounded-2xl border border-white/5">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-muted/30 p-6 rounded-2xl border border-border transition-colors">
                                                     <div>
-                                                        <p className="text-slate-500 text-xs font-bold uppercase mb-1">{t('sessionPrice')}</p>
-                                                        <p className="text-2xl font-black">{expert.price}</p>
+                                                        <p className="text-muted-foreground text-xs font-bold uppercase mb-1 transition-colors">{t('sessionPrice')}</p>
+                                                        <p className="text-2xl font-black text-foreground transition-colors">{expert.price}</p>
                                                     </div>
-                                                    <Button onClick={() => {
+                                                    <Button variant="primary" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
                                                         setSelectedExpert(expert.id);
                                                         setSelectedSlot(null);
                                                         setSelectedDate(null);

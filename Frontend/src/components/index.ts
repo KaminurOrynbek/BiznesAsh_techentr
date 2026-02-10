@@ -7,3 +7,4 @@ export { Alert } from './Alert';
 export { Navbar } from './Navbar';
 export { ProtectedRoute } from './ProtectedRoute';
 export { NotificationWatcher } from './NotificationWatcher';
+export { ThemeToggle } from './ThemeToggle';

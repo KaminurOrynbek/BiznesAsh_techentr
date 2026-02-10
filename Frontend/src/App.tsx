@@ -15,92 +15,98 @@ import {
   SubscriptionPage,
   ExpertListingPage,
   VerifyEmailPage,
+  ContactPage,
 } from "./pages";
+
+import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Toaster />
-        <NotificationWatcher />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
+    <ThemeProvider>
+      <Router>
+        <AuthProvider>
+          <Toaster />
+          <NotificationWatcher />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-          {/* Public (or make protected if you want) */}
-          <Route path="/handbook" element={<HandbookPage />} />
+            {/* Public (or make protected if you want) */}
+            <Route path="/handbook" element={<HandbookPage />} />
+            <Route path="/contact" element={<ContactPage />} />
 
-          {/* Protected */}
-          <Route
-            path="/feed"
-            element={
-              <ProtectedRoute>
-                <FeedPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected */}
+            <Route
+              path="/feed"
+              element={
+                <ProtectedRoute>
+                  <FeedPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/post/:postId"
-            element={
-              <ProtectedRoute>
-                <PostDetailPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/post/:postId"
+              element={
+                <ProtectedRoute>
+                  <PostDetailPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute>
-                <NotificationsPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* If your Profile page is not user-specific, change to "/profile" */}
-          <Route
-            path="/profile/:userId"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+            {/* If your Profile page is not user-specific, change to "/profile" */}
+            <Route
+              path="/profile/:userId"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/subscriptions"
-            element={
-              <ProtectedRoute>
-                <SubscriptionPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/subscriptions"
+              element={
+                <ProtectedRoute>
+                  <SubscriptionPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/experts"
-            element={
-              <ProtectedRoute>
-                <ExpertListingPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/experts"
+              element={
+                <ProtectedRoute>
+                  <ExpertListingPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </ThemeProvider>
   );
 }
 

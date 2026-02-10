@@ -9,4 +9,5 @@ export { HandbookPage } from './HandbookPage';
 export { SubscriptionPage } from './SubscriptionPage';
 export { ExpertListingPage } from './ExpertListingPage';
 export { VerifyEmailPage } from './VerifyEmailPage';
+export { ContactPage } from './ContactPage';
 

@@ -253,5 +253,22 @@
     "zhibekBio": "Helping young founders navigate bureaucratic barriers and protect their intellectual property.",
     "success": "Success",
     "error": "Error",
-    "yourAddress": "your address"
+    "yourAddress": "your address",
+    "contact": "Contact",
+    "contactUs": "Contact Us",
+    "contactSubtitle": "Have questions or need support? We're here to help you on your business journey.",
+    "getInTouch": "Get in Touch",
+    "fullName": "Full Name",
+    "subject": "Subject",
+    "message": "Message",
+    "sendMessage": "Send Message",
+    "sendingMessage": "Sending...",
+    "messageSent": "Your message has been sent successfully!",
+    "messageError": "Failed to send message. Please try again.",
+    "contactInfo": "Contact Information",
+    "location": "Location",
+    "astanaKazakhstan": "Astana, Kazakhstan",
+    "workingHours": "Working Hours",
+    "workingHoursDetail": "Mon - Fri: 9:00 - 18:00",
+    "followUs": "Follow Us"
 }

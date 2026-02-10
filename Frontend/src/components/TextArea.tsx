@@ -1,4 +1,5 @@
 interface TextAreaProps {
+  name?: string;
   placeholder?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -7,9 +8,11 @@ interface TextAreaProps {
   error?: string;
   label?: string;
   rows?: number;
+  required?: boolean;
 }
 
 export const TextArea = ({
+  name,
   placeholder = '',
   value,
   onChange,
@@ -18,19 +21,21 @@ export const TextArea = ({
   error,
   label,
   rows = 4,
+  required = false,
 }: TextAreaProps) => {
   return (
     <div className="w-full">
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+      {label && <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>}
       <textarea
+        name={name}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
         disabled={disabled}
+        required={required}
         rows={rows}
-        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
-          error ? 'border-red-500' : 'border-gray-300'
-        } disabled:bg-gray-100 disabled:cursor-not-allowed ${className}`}
+        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 ${error ? 'border-red-500' : 'border-slate-300 dark:border-slate-800'
+          } disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed transition-colors ${className}`}
       />
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
