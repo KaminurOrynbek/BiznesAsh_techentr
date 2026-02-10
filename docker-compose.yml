@@ -13,7 +13,83 @@ services:
     networks:
       - fnet
 
-  
+  userservice:
+    build:
+      context: ./UserService
+      dockerfile: Dockerfile
+    container_name: userservice
+    environment:
+      - POSTGRES_DSN=postgres://postgres:0000@postgres:5432/biznesAsh?sslmode=disable
+      - GRPC_PORT=8081
+    depends_on:
+      - postgres
+    networks:
+      - fnet
+
+  contentservice:
+    build:
+      context: ./ContentService
+      dockerfile: Dockerfile
+    container_name: contentservice
+    environment:
+      - DATABASE_URL=postgres://postgres:0000@postgres:5432/biznesAsh?sslmode=disable
+      - GRPC_PORT=8082
+    depends_on:
+      - postgres
+    networks:
+      - fnet
+
+  notificationservice:
+    build:
+      context: ./NotificationService
+      dockerfile: Dockerfile
+    container_name: notificationservice
+    environment:
+      - DATABASE_URL=postgres://postgres:0000@postgres:5432/biznesAsh?sslmode=disable
+      - GRPC_PORT=8083
+    depends_on:
+      - postgres
+    networks:
+      - fnet
+
+  subscriptionservice:
+    build:
+      context: ./SubscriptionService
+      dockerfile: Dockerfile
+    container_name: subscriptionservice
+    environment:
+      - DATABASE_URL=postgres://postgres:0000@postgres:5432/biznesAsh?sslmode=disable
+      - GRPC_PORT=8086
+    depends_on:
+      - postgres
+    networks:
+      - fnet
+
+  paymentservice:
+    build:
+      context: ./PaymentService
+      dockerfile: Dockerfile
+    container_name: paymentservice
+    environment:
+      - DATABASE_URL=postgres://postgres:0000@postgres:5432/biznesAsh?sslmode=disable
+      - GRPC_PORT=8087
+    depends_on:
+      - postgres
+    networks:
+      - fnet
+
+  consultationservice:
+    build:
+      context: ./ConsultationService
+      dockerfile: Dockerfile
+    container_name: consultationservice
+    environment:
+      - DATABASE_URL=postgres://postgres:0000@postgres:5432/biznesAsh?sslmode=disable
+      - GRPC_PORT=8088
+    depends_on:
+      - postgres
+    networks:
+      - fnet
 
   apigateway:
     build:
@@ -22,10 +98,21 @@ services:
     container_name: apigateway-service
     ports:
       - "8080:8080"
-    env_file:
-      - ./APIGateway/.env
+    environment:
+      - PORT=8080
+      - USER_SERVICE_URL=userservice:8081
+      - CONTENT_SERVICE_URL=contentservice:8082
+      - NOTIFICATION_SERVICE_URL=notificationservice:8083
+      - SUBSCRIPTION_SERVICE_URL=subscriptionservice:8086
+      - PAYMENT_SERVICE_URL=paymentservice:8087
+      - CONSULTATION_SERVICE_URL=consultationservice:8088
     depends_on:
       - userservice
+      - contentservice
+      - notificationservice
+      - subscriptionservice
+      - paymentservice
+      - consultationservice
     networks:
       - fnet
 
@@ -34,4 +121,4 @@ volumes:
 
 networks:
   fnet:
-    external: true
+    driver: bridge

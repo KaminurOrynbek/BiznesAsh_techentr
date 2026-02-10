@@ -11,6 +11,8 @@ import {
   NotificationsPage,
   HandbookPage,
   ProfilePage,
+  SubscriptionPage,
+  ExpertListingPage,
 } from "./pages";
 
 function App() {
@@ -59,6 +61,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/subscriptions"
+            element={
+              <ProtectedRoute>
+                <SubscriptionPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/experts"
+            element={
+              <ProtectedRoute>
+                <ExpertListingPage />
               </ProtectedRoute>
             }
           />

@@ -19,6 +19,10 @@ import (
 	contentpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/content"
 	notificationpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/notification"
 	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
+
+	conpb "github.com/KaminurOrynbek/BiznesAsh/ConsultationService/proto"
+	paypb "github.com/KaminurOrynbek/BiznesAsh/PaymentService/proto"
+	subpb "github.com/KaminurOrynbek/BiznesAsh/SubscriptionService/proto"
 )
 
 var banMismatchCounter = prometheus.NewCounterVec(
@@ -39,24 +43,66 @@ func main() {
 		log.Println("No .env file found or error loading .env file")
 	}
 
-	userConn, err := grpc.Dial(os.Getenv("USER_SERVICE_URL"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	userURL := os.Getenv("USER_SERVICE_URL")
+	if userURL == "" {
+		userURL = "localhost:8081"
+	}
+	userConn, err := grpc.Dial(userURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to UserService: %v", err)
 	}
 
-	contentConn, err := grpc.Dial(os.Getenv("CONTENT_SERVICE_URL"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	contentURL := os.Getenv("CONTENT_SERVICE_URL")
+	if contentURL == "" {
+		contentURL = "localhost:8082"
+	}
+	contentConn, err := grpc.Dial(contentURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to ContentService: %v", err)
 	}
 
-	notificationConn, err := grpc.Dial(os.Getenv("NOTIFICATION_SERVICE_URL"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	notificationURL := os.Getenv("NOTIFICATION_SERVICE_URL")
+	if notificationURL == "" {
+		notificationURL = "localhost:8083"
+	}
+	notificationConn, err := grpc.Dial(notificationURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to NotificationService: %v", err)
+	}
+
+	subscriptionURL := os.Getenv("SUBSCRIPTION_SERVICE_URL")
+	if subscriptionURL == "" {
+		subscriptionURL = "localhost:8086"
+	}
+	subscriptionConn, err := grpc.Dial(subscriptionURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to SubscriptionService: %v", err)
+	}
+
+	paymentURL := os.Getenv("PAYMENT_SERVICE_URL")
+	if paymentURL == "" {
+		paymentURL = "localhost:8087"
+	}
+	paymentConn, err := grpc.Dial(paymentURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to PaymentService: %v", err)
+	}
+
+	consultationURL := os.Getenv("CONSULTATION_SERVICE_URL")
+	if consultationURL == "" {
+		consultationURL = "localhost:8088"
+	}
+	consultationConn, err := grpc.Dial(consultationURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to ConsultationService: %v", err)
 	}
 
 	userClient := userpb.NewUserServiceClient(userConn)
 	contentClient := contentpb.NewContentServiceClient(contentConn)
 	notificationClient := notificationpb.NewNotificationServiceClient(notificationConn)
+	subscriptionClient := subpb.NewSubscriptionServiceClient(subscriptionConn)
+	paymentClient := paypb.NewPaymentServiceClient(paymentConn)
+	consultationClient := conpb.NewConsultationServiceClient(consultationConn)
 
 	router := gin.Default()
 
@@ -71,9 +117,16 @@ func main() {
 	handler.RegisterUserRoutes(router, userClient)
 	handler.RegisterContentRoutes(router, contentClient, userClient)
 	handler.RegisterNotificationRoutes(router, notificationClient)
+	handler.RegisterSubscriptionRoutes(router, subscriptionClient)
+	handler.RegisterPaymentRoutes(router, paymentClient)
+	handler.RegisterConsultationRoutes(router, consultationClient)
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	log.Printf("REST API started at http://localhost:%s", os.Getenv("PORT"))
-	router.Run(":" + os.Getenv("PORT"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("REST API started at http://localhost:%s", port)
+	router.Run(":" + port)
 }

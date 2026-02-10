@@ -6,6 +6,7 @@ const (
 	RoleAdmin     Role = "admin"
 	RoleModerator Role = "moderator"
 	RoleUser      Role = "user"
+	RoleExpert    Role = "expert"
 )
 
 func (r Role) IsAdmin() bool {
@@ -18,4 +19,8 @@ func (r Role) IsModerator() bool {
 
 func (r Role) IsUser() bool {
 	return r == RoleUser
+}
+
+func (r Role) IsExpert() bool {
+	return r == RoleExpert
 }

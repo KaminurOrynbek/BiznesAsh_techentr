@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package subscription;
+
+option go_package = "github.com/KaminurOrynbek/BiznesAsh/SubscriptionService/proto";
+
+service SubscriptionService {
+    rpc GetSubscription(GetSubscriptionRequest) returns (SubscriptionResponse);
+    rpc UpdateSubscription(UpdateSubscriptionRequest) returns (SubscriptionResponse);
+    rpc CancelSubscription(CancelSubscriptionRequest) returns (SubscriptionResponse);
+    rpc GetSubscriptionHistory(GetSubscriptionRequest) returns (ListSubscriptionsResponse);
+    rpc ListSubscriptions(Empty) returns (ListSubscriptionsResponse);
+}
+
+message CancelSubscriptionRequest {
+    string id = 1;
+}
+
+message Empty {}
+
+message GetSubscriptionRequest {
+    string user_id = 1;
+}
+
+message UpdateSubscriptionRequest {
+    string user_id = 1;
+    string plan_type = 2; // BASIC, PRO
+    int32 duration_months = 3;
+}
+
+message SubscriptionResponse {
+    string id = 1;
+    string user_id = 2;
+    string plan_type = 3;
+    string status = 4;
+    string starts_at = 5;
+    string ends_at = 6;
+}
+
+message ListSubscriptionsResponse {
+    repeated SubscriptionResponse subscriptions = 1;
+}

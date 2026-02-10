@@ -3,6 +3,9 @@ module github.com/KaminurOrynbek/BiznesAsh/APIGateway
 go 1.24.1
 
 require (
+	github.com/KaminurOrynbek/BiznesAsh/ConsultationService v0.0.0-00010101000000-000000000000
+	github.com/KaminurOrynbek/BiznesAsh/PaymentService v0.0.0-00010101000000-000000000000
+	github.com/KaminurOrynbek/BiznesAsh/SubscriptionService v0.0.0-00010101000000-000000000000
 	github.com/KaminurOrynbek/BiznesAsh_lib v0.0.0-20250522164016-b6c6e06502fc
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1
@@ -10,6 +13,12 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	google.golang.org/grpc v1.72.1
 )
+
+replace github.com/KaminurOrynbek/BiznesAsh/SubscriptionService => ../SubscriptionService
+
+replace github.com/KaminurOrynbek/BiznesAsh/PaymentService => ../PaymentService
+
+replace github.com/KaminurOrynbek/BiznesAsh/ConsultationService => ../ConsultationService
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect

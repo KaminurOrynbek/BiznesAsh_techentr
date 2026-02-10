@@ -3,8 +3,7 @@ import { useAuth } from "../context/useAuth";
 import { Handshake } from "lucide-react";
 
 const itemClass = ({ isActive }: { isActive: boolean }) =>
-  `relative px-1 py-2 text-sm font-semibold transition-colors ${
-    isActive ? "text-brand-700" : "text-slate-500 hover:text-slate-900"
+  `relative px-1 py-2 text-sm font-semibold transition-colors ${isActive ? "text-brand-700" : "text-slate-500 hover:text-slate-900"
   }`;
 
 export const Navbar = () => {
@@ -33,9 +32,16 @@ export const Navbar = () => {
                 <NavLink to="/handbook" className={itemClass}>
                   Handbook
                 </NavLink>
+                <NavLink to="/subscriptions" className={itemClass}>
+                  Plans
+                </NavLink>
+                <NavLink to="/experts" className={itemClass}>
+                  Experts
+                </NavLink>
                 <NavLink to="/notifications" className={itemClass}>
                   Notifications
                 </NavLink>
+
               </div>
 
               <div className="h-6 w-[1px] bg-slate-200 mx-2 hidden md:block" />

@@ -47,22 +47,7 @@ export const authService = {
   },
 
   async updateProfile(userId: string, payload: UpdateProfilePayload): Promise<User> {
-    const token = localStorage.getItem("token");
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/users/${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Failed to update profile");
-    }
-
-    return res.json();
+    const res = await apiClient.put<User>(`/users/${userId}`, payload);
+    return res.data;
   },
 };
