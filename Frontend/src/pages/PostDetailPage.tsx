@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navbar, Card, Loading, Alert, Button, TextArea } from "../components";
 import type { Post, Comment } from "../services/contentService";
 import { contentService } from "../services/contentService";
@@ -7,6 +8,7 @@ import { Trash2, MessageSquare, ThumbsUp } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 
 export const PostDetailPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { postId } = useParams<{ postId: string }>();
 
@@ -30,7 +32,7 @@ export const PostDetailPage = () => {
       setPost(postData);
       setComments(commentsData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load post");
+      setError(err instanceof Error ? err.message : t('postLoadError', { defaultValue: 'Failed to load post' }));
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +57,7 @@ export const PostDetailPage = () => {
       setComments((prev) => [...prev, newComment]);
       setNewCommentContent("");
     } catch {
-      setError("Failed to create comment");
+      setError(t('commentCreateError', { defaultValue: 'Failed to create comment' }));
     } finally {
       setIsCommenting(false);
     }
@@ -66,7 +68,7 @@ export const PostDetailPage = () => {
       await contentService.deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch {
-      setError("Failed to delete comment");
+      setError(t('commentDeleteError', { defaultValue: 'Failed to delete comment' }));
     }
   };
 
@@ -76,7 +78,7 @@ export const PostDetailPage = () => {
       const likesCount = await contentService.likePost(post.id);
       setPost({ ...post, likesCount, liked: true });
     } catch {
-      setError("Failed to like post");
+      setError(t('postLikeError', { defaultValue: 'Failed to like post' }));
     }
   };
 
@@ -86,7 +88,7 @@ export const PostDetailPage = () => {
       const likesCount = await contentService.unlikePost(post.id);
       setPost({ ...post, likesCount, liked: false });
     } catch {
-      setError("Failed to unlike post");
+      setError(t('postUnlikeError', { defaultValue: 'Failed to unlike post' }));
     }
   };
 
@@ -99,7 +101,7 @@ export const PostDetailPage = () => {
         )
       );
     } catch {
-      setError("Failed to like comment");
+      setError(t('commentLikeError', { defaultValue: 'Failed to like comment' }));
     }
   };
 
@@ -112,17 +114,17 @@ export const PostDetailPage = () => {
         )
       );
     } catch {
-      setError("Failed to unlike comment");
+      setError(t('commentUnlikeError', { defaultValue: 'Failed to unlike comment' }));
     }
   };
 
   const handleDeletePost = async () => {
-    if (!post || !window.confirm("Are you sure you want to delete this post?")) return;
+    if (!post || !window.confirm(t('deletePostConfirm'))) return;
     try {
       await contentService.deletePost(post.id);
       window.location.href = "/feed";
     } catch {
-      setError("Failed to delete post");
+      setError(t('postDeleteError', { defaultValue: 'Failed to delete post' }));
     }
   };
 
@@ -159,7 +161,7 @@ export const PostDetailPage = () => {
                   <button
                     onClick={handleDeletePost}
                     className="h-10 w-10 rounded-full hover:bg-red-50 flex items-center justify-center group transition-colors"
-                    title="Delete Post"
+                    title={t('deletePost')}
                   >
                     <Trash2 className="h-5 w-5 text-slate-400 group-hover:text-red-500 transition-colors" />
                   </button>
@@ -182,17 +184,17 @@ export const PostDetailPage = () => {
                     }}
                   >
                     <ThumbsUp className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-                    <span className="font-medium">Like {post.likesCount > 0 && `(${post.likesCount})`}</span>
+                    <span className="font-medium">{t('like')} {post.likesCount > 0 && `(${post.likesCount})`}</span>
                   </Button>
                 </div>
                 <span className="flex items-center gap-2 text-gray-500 text-sm">
-                  <MessageSquare className="h-4 w-4" /> {post.commentsCount} Comments
+                  <MessageSquare className="h-4 w-4" /> {post.commentsCount} {t('comments')}
                 </span>
               </div>
             </Card >
 
             <Card className="mb-8">
-              <h3 className="text-lg font-bold mb-4">Add a Comment</h3>
+              <h3 className="text-lg font-bold mb-4">{t('addComment')}</h3>
               <form onSubmit={handleCreateComment} className="space-y-4">
                 <TextArea
                   placeholder="Share your thoughts..."
@@ -204,15 +206,15 @@ export const PostDetailPage = () => {
                   rows={3}
                 />
                 <Button type="submit" disabled={isCommenting || !newCommentContent.trim()}>
-                  {isCommenting ? "Commenting..." : "Comment"}
+                  {isCommenting ? t('commenting') : t('comment')}
                 </Button>
               </form>
             </Card>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-bold mb-4">Comments</h3>
+              <h3 className="text-lg font-bold mb-4">{t('comments')}</h3>
               {comments.length === 0 ? (
-                <p className="text-gray-600">No comments yet.</p>
+                <p className="text-gray-600">{t('noComments')}</p>
               ) : (
                 comments.map((comment) => {
                   return (
@@ -231,7 +233,7 @@ export const PostDetailPage = () => {
                         </div>
                         {user && comment.authorId === user.id && (
                           <Button variant="danger" size="sm" onClick={() => handleDeleteComment(comment.id)} className="h-6 py-0 px-2 text-[10px]">
-                            Delete
+                            {t('delete')}
                           </Button>
                         )}
                       </div>
@@ -246,7 +248,7 @@ export const PostDetailPage = () => {
                               onClick={() => comment.liked ? handleUnlikeComment(comment.id) : handleLikeComment(comment.id)}
                             >
                               <ThumbsUp className={`h-3 w-3 ${comment.liked ? "fill-current" : ""}`} />
-                              <span>Like {comment.likesCount > 0 && `(${comment.likesCount})`}</span>
+                              <span>{t('like')} {comment.likesCount > 0 && `(${comment.likesCount})`}</span>
                             </button>
                           </div>
                         </div>
@@ -262,7 +264,7 @@ export const PostDetailPage = () => {
             </div>
           </>
         ) : (
-          <Alert type="error" message="Post not found" />
+          <Alert type="error" message={t('postNotFound')} />
         )}
       </div >
     </>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navbar, Loading, Alert, Button, Input } from "../components";
 import type { User as UserType } from "../services/authService";
 import { authService } from "../services/authService";
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 
 export const ProfilePage = () => {
+  const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
@@ -91,7 +93,7 @@ export const ProfilePage = () => {
         setBookings([]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load profile");
+      setError(err instanceof Error ? err.message : t('profileError', { defaultValue: 'Failed to load profile' }));
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +111,7 @@ export const ProfilePage = () => {
       });
       setUser(updatedUser);
       setIsEditing(false);
-      alert("Profile updated successfully!");
+      alert(t('profileUpdatedSuccess', { defaultValue: 'Profile updated successfully!' }));
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update profile");
     } finally {
@@ -118,31 +120,31 @@ export const ProfilePage = () => {
   };
 
   const handleCancelSubscription = async (id: string) => {
-    if (!window.confirm("Are you sure you want to cancel your subscription?")) return;
+    if (!window.confirm(t('cancelSubscriptionConfirm'))) return;
     try {
       await apiClient.post("/api/v1/subscriptions/cancel", { id });
       alert("Subscription cancelled successfully.");
       fetchData(); // Refresh
     } catch (err) {
-      alert("Failed to cancel subscription");
+      alert(t('cancelSubscriptionError', { defaultValue: 'Failed to cancel subscription' }));
     }
   };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!window.confirm("Cancel this consultation?")) return;
+    if (!window.confirm(t('cancelBookingConfirm'))) return;
     try {
       await apiClient.post("/api/v1/consultations/cancel", { bookingId });
       alert("Consultation cancelled successfully.");
       fetchData(); // Refresh
     } catch (err) {
-      alert("Failed to cancel booking");
+      alert(t('cancelBookingError', { defaultValue: 'Failed to cancel booking' }));
     }
   };
 
   const getTimeRemaining = (expiry: string) => {
     const total = Date.parse(expiry) - Date.parse(new Date().toISOString());
     const days = Math.floor(total / (1000 * 60 * 60 * 24));
-    return days > 0 ? `${days} days left` : "Expired today";
+    return days > 0 ? t('daysLeft', { count: days }) : t('expiredToday');
   };
 
   if (isLoading) return <><Navbar /><div className="min-h-screen bg-[#0f172a] pt-20"><Loading /></div></>;
@@ -166,7 +168,7 @@ export const ProfilePage = () => {
                 }`}
             >
               <User size={20} />
-              <span className="font-medium">Profile Details</span>
+              <span className="font-medium">{t('profileDetails')}</span>
             </button>
 
             {/* Only show these if viewing own profile */}
@@ -178,7 +180,7 @@ export const ProfilePage = () => {
                     }`}
                 >
                   <CreditCard size={20} />
-                  <span className="font-medium">My Subscription</span>
+                  <span className="font-medium">{t('mySubscription')}</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("bookings")}
@@ -186,7 +188,7 @@ export const ProfilePage = () => {
                     }`}
                 >
                   <Calendar size={20} />
-                  <span className="font-medium">Consultations</span>
+                  <span className="font-medium">{t('consultations')}</span>
                 </button>
               </>
             )}
@@ -199,13 +201,13 @@ export const ProfilePage = () => {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
-                      <Settings className="text-blue-400" /> Account Profile
+                      <Settings className="text-blue-400" /> {t('accountProfile')}
                     </h2>
-                    <p className="text-gray-400 text-sm mt-1">Manage your personal information and security</p>
+                    <p className="text-gray-400 text-sm mt-1">{t('manageInfo')}</p>
                   </div>
                   {!isEditing && isOwnProfile && (
                     <Button variant="secondary" onClick={() => setIsEditing(true)}>
-                      Edit Profile
+                      {t('editProfile')}
                     </Button>
                   )}
                 </div>
@@ -227,29 +229,29 @@ export const ProfilePage = () => {
                     />
                     <div className="flex space-x-4 pt-4">
                       <Button type="submit" disabled={isSaving}>
-                        {isSaving ? "Saving..." : "Save Changes"}
+                        {isSaving ? t('saving') : t('saveChanges')}
                       </Button>
-                      <Button variant="secondary" onClick={() => setIsEditing(false)}>Cancel</Button>
+                      <Button variant="secondary" onClick={() => setIsEditing(false)}>{t('cancel')}</Button>
                     </div>
                   </form>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Username</label>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('usernameLabel')}</label>
                       <p className="text-lg font-medium">{user?.username || "—"}</p>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</label>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('emailLabel')}</label>
                       <p className="text-lg font-medium">{user?.email || "—"}</p>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Member Since</label>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('memberSince')}</label>
                       <p className="text-lg font-medium">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Security</label>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('security')}</label>
                       <p className="text-green-400 flex items-center gap-1 font-medium">
-                        <ShieldCheck size={16} /> Verified Account
+                        <ShieldCheck size={16} /> {t('verifiedAccount')}
                       </p>
                     </div>
                   </div>
@@ -264,12 +266,12 @@ export const ProfilePage = () => {
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <span className="px-3 py-1 rounded-full bg-blue-500 text-xs font-bold uppercase tracking-widest text-white">
-                          Active Plan
+                          {t('activePlan')}
                         </span>
                         <h2 className="text-4xl font-extrabold mt-3">{subscription.plan_type}</h2>
                       </div>
                       <div className="text-right">
-                        <p className="text-gray-400 text-sm">Status</p>
+                        <p className="text-gray-400 text-sm">{t('status')}</p>
                         <p className="text-green-400 font-bold uppercase tracking-tight">{subscription.status}</p>
                       </div>
                     </div>
@@ -280,7 +282,7 @@ export const ProfilePage = () => {
                           <Clock size={24} />
                         </div>
                         <div>
-                          <p className="text-gray-400 text-xs">Access Expires In</p>
+                          <p className="text-gray-400 text-xs">{t('accessExpiresIn')}</p>
                           <p className="font-bold text-lg">{getTimeRemaining(subscription.ends_at)}</p>
                         </div>
                       </div>
@@ -289,19 +291,19 @@ export const ProfilePage = () => {
                           <CheckCircle2 size={24} />
                         </div>
                         <div>
-                          <p className="text-gray-400 text-xs">Billing Date</p>
+                          <p className="text-gray-400 text-xs">{t('billingDate')}</p>
                           <p className="font-bold text-lg">{new Date(subscription.starts_at).toLocaleDateString()}</p>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex space-x-4">
-                      <Button variant="secondary" onClick={() => navigate("/subscriptions")}>Upgrade Plan</Button>
+                      <Button variant="secondary" onClick={() => navigate("/subscriptions")}>{t('upgradePlan')}</Button>
                       <button
                         onClick={() => handleCancelSubscription(subscription.id)}
                         className="text-gray-500 hover:text-red-400 transition-colors text-sm font-medium underline"
                       >
-                        Cancel Auto-renewal
+                        {t('cancelAutoRenewal')}
                       </button>
                     </div>
                   </div>
@@ -310,11 +312,11 @@ export const ProfilePage = () => {
                     <div className="bg-white/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                       <AlertCircle size={32} />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">No Active Plan</h3>
+                    <h3 className="text-xl font-bold mb-2">{t('noActivePlan')}</h3>
                     <p className="text-gray-400 mb-6 max-w-sm mx-auto">
-                      Unlock full access to expert consultations and premium financial guides today.
+                      {t('unlockAccess')}
                     </p>
-                    <Button onClick={() => navigate("/subscriptions")}>Explore Plans</Button>
+                    <Button onClick={() => navigate("/subscriptions")}>{t('explorePlans')}</Button>
                   </div>
                 )}
               </div>
@@ -323,8 +325,8 @@ export const ProfilePage = () => {
             {activeTab === "bookings" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">Your Consultations</h2>
-                  <Button onClick={() => navigate("/experts")} size="sm" variant="secondary">Book New</Button>
+                  <h2 className="text-2xl font-bold">{t('yourConsultations')}</h2>
+                  <Button onClick={() => navigate("/experts")} size="sm" variant="secondary">{t('bookNew')}</Button>
                 </div>
 
                 {bookings.length > 0 ? (
@@ -336,7 +338,7 @@ export const ProfilePage = () => {
                             <Calendar size={20} />
                           </div>
                           <div>
-                            <h4 className="font-bold text-lg">Consultation with {booking.expert_name || "Expert"}</h4>
+                            <h4 className="font-bold text-lg">{t('consultationWith', { name: booking.expert_name || "Expert" })}</h4>
                             <div className="flex items-center text-sm text-gray-400 gap-3 mt-1">
                               <span className="flex items-center gap-1">
                                 <Clock size={14} /> {new Date(booking.scheduled_at).toLocaleDateString()} at {new Date(booking.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -355,11 +357,11 @@ export const ProfilePage = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold transition-all"
                           >
-                            <ExternalLink size={16} /> Join Session
+                            <ExternalLink size={16} /> {t('joinSession')}
                           </a>
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
-                            className="p-2 text-gray-500 hover:text-red-400 transition-all rounded-lg hover:bg-red-400/10" title="Cancel Booking"
+                            className="p-2 text-gray-500 hover:text-red-400 transition-all rounded-lg hover:bg-red-400/10" title={t('cancelBooking')}
                           >
                             <Trash2 size={20} />
                           </button>
@@ -369,7 +371,7 @@ export const ProfilePage = () => {
                   </div>
                 ) : (
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center text-gray-400">
-                    <p>You have no scheduled consultations yet.</p>
+                    <p>{t('noBookings')}</p>
                   </div>
                 )}
               </div>

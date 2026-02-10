@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 // shadcn/ui
 import { Button } from "../components/ui/button";
@@ -27,6 +29,7 @@ export const LoginPage = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,7 +40,7 @@ export const LoginPage = () => {
       await login(email, password);
       navigate("/feed");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+      setError(err instanceof Error ? err.message : t('loginFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -50,6 +53,13 @@ export const LoginPage = () => {
       <div className="absolute inset-0 opacity-40 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.35),transparent_55%)]" />
       <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
       <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
+
+      {/* Language Switcher in top right */}
+      <div className="absolute top-4 right-4 z-50">
+        <div className="bg-white/20 backdrop-blur-md rounded-lg p-1">
+          <LanguageSwitcher />
+        </div>
+      </div>
 
       <div className="relative min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md bg-white/95 backdrop-blur border-white/20 shadow-2xl">
@@ -66,10 +76,10 @@ export const LoginPage = () => {
 
             <div className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center text-slate-900">
-                Sign in to BiznesAsh
+                {t('loginTitle')}
               </CardTitle>
               <CardDescription className="text-center">
-                Enter your email and password to access your account
+                {t('loginDesc')}
               </CardDescription>
             </div>
           </CardHeader>
@@ -77,14 +87,14 @@ export const LoginPage = () => {
           <CardContent className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <AlertTitle>Login error</AlertTitle>
+                <AlertTitle>{t('loginError')}</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -97,7 +107,7 @@ export const LoginPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('passwordLabel')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -114,19 +124,19 @@ export const LoginPage = () => {
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? t('signingIn') : t('signInButton')}
               </Button>
             </form>
           </CardContent>
 
           <CardFooter className="flex justify-center">
             <div className="text-sm text-slate-600">
-              Don&apos;t have an account?{" "}
+              {t('noAccount')}{" "}
               <Link
                 to="/register"
                 className="font-semibold text-blue-700 hover:text-blue-600"
               >
-                Sign up
+                {t('signUpLink')}
               </Link>
             </div>
           </CardFooter>

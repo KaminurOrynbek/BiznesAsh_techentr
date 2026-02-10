@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 
 import {
@@ -34,28 +35,31 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-const DocRow = ({ name, desc }: { name: string; desc: string }) => (
-  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-    <div className="flex items-center gap-3">
-      <div className="h-8 w-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
-        <FileText className="h-4 w-4 text-slate-400" />
+const DocRow = ({ name, desc }: { name: string; desc: string }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
+          <FileText className="h-4 w-4 text-slate-400" />
+        </div>
+        <div>
+          <div className="font-semibold text-slate-900 text-sm">{name}</div>
+          <div className="text-xs text-slate-500">{desc}</div>
+        </div>
       </div>
-      <div>
-        <div className="font-semibold text-slate-900 text-sm">{name}</div>
-        <div className="text-xs text-slate-500">{desc}</div>
-      </div>
-    </div>
 
-    <button
-      type="button"
-      className="h-9 w-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition"
-      aria-label="Download"
-      title="Download (placeholder)"
-    >
-      <Download className="h-4 w-4 text-slate-400" />
-    </button>
-  </div>
-);
+      <button
+        type="button"
+        className="h-9 w-9 rounded-xl hover:bg-slate-100 flex items-center justify-center transition"
+        aria-label={t('download', { defaultValue: 'Download' })}
+        title={t('downloadPlaceholder', { defaultValue: 'Download (placeholder)' })}
+      >
+        <Download className="h-4 w-4 text-slate-400" />
+      </button>
+    </div>
+  );
+};
 
 const AccordionItem = ({
   title,
@@ -87,34 +91,34 @@ const AccordionItem = ({
 };
 
 export const HandbookPage = () => {
+  const { t } = useTranslation();
   const chapters: Chapter[] = useMemo(
     () => [
       {
         id: "registration",
-        title: "Registration Steps",
+        title: t('registrationSteps'),
         icon: Book,
         render: () => (
           <div className="space-y-8">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900 mb-3">
-                Step 1: Choose Your Legal Entity
+                {t('step1Legal')}
               </h2>
               <p className="text-slate-700 mb-4">
-                Before registering, decide between Individual Entrepreneur (IE/IP) and
-                Limited Liability Partnership (LLP/TOO).
+                {t('decideLegal')}
               </p>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <Card className="p-0">
                   <div className="p-5">
                     <div className="font-bold text-slate-900 mb-2">
-                      Individual Entrepreneur (IE)
+                      {t('ieTitle')}
                     </div>
                     <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600">
-                      <li>Simpler registration (online)</li>
-                      <li>Lower fines</li>
-                      <li>Personal liability for debts</li>
-                      <li>Good for solo founders</li>
+                      <li>{t('ieSimpler')}</li>
+                      <li>{t('ieLowerFines')}</li>
+                      <li>{t('ieLiability')}</li>
+                      <li>{t('ieSolo')}</li>
                     </ul>
                   </div>
                 </Card>
@@ -122,13 +126,13 @@ export const HandbookPage = () => {
                 <Card className="p-0">
                   <div className="p-5">
                     <div className="font-bold text-slate-900 mb-2">
-                      Limited Liability Partnership (LLP)
+                      {t('llpTitle')}
                     </div>
                     <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600">
-                      <li>Separate legal entity</li>
-                      <li>Liability limited to capital</li>
-                      <li>More reporting requirements</li>
-                      <li>Good for partners/scaling</li>
+                      <li>{t('llpSeparate')}</li>
+                      <li>{t('llpLimited')}</li>
+                      <li>{t('llpReporting')}</li>
+                      <li>{t('llpScaling')}</li>
                     </ul>
                   </div>
                 </Card>
@@ -137,17 +141,17 @@ export const HandbookPage = () => {
 
             <div className="pt-6 border-t border-slate-200">
               <h2 className="text-2xl font-extrabold text-slate-900 mb-3">
-                Step 2: Register Online
+                {t('step2Register')}
               </h2>
               <p className="text-slate-700 mb-4">
-                You can register online via eGov.kz or banking apps (Kaspi, Halyk).
+                {t('egovNotice')}
               </p>
 
               <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <div className="font-bold text-blue-900 mb-2">Required for eGov:</div>
+                <div className="font-bold text-blue-900 mb-2">{t('requiredEgov')}</div>
                 <ul className="list-disc pl-5 space-y-1 text-sm text-blue-800">
-                  <li>Valid EDS (Digital Signature) keys</li>
-                  <li>Registered phone number in Mobile Citizens Database</li>
+                  <li>{t('validEds')}</li>
+                  <li>{t('registeredPhone')}</li>
                 </ul>
               </div>
             </div>
@@ -156,46 +160,46 @@ export const HandbookPage = () => {
       },
       {
         id: "documents",
-        title: "Required Documents",
+        title: t('requiredDocuments'),
         icon: FileText,
         render: () => (
           <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900">Document Checklist</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900">{t('docChecklist')}</h2>
             <p className="text-slate-700">
-              Depending on business type, prepare specific documents.
+              {t('prepareDocs')}
             </p>
 
             <div className="space-y-3">
-              <DocRow name="Identity Card (UDL)" desc="Scan of your national ID" />
+              <DocRow name={t('idCard')} desc={t('idCardDesc')} />
               <DocRow
-                name="Proof of Address"
-                desc="Address certificate (can be pulled from eGov)"
+                name={t('proofAddress')}
+                desc={t('proofAddressDesc')}
               />
-              <DocRow name="Charter (for LLP)" desc="Founding document describing rules" />
-              <DocRow name="Founder's Decision" desc="Written decision to start the company" />
+              <DocRow name={t('charter')} desc={t('charterDesc')} />
+              <DocRow name={t('founderDecision')} desc={t('founderDecisionDesc')} />
             </div>
 
             <div className="pt-2 flex gap-2 flex-wrap">
-              <Pill>Tip: keep scans in one folder</Pill>
-              <Pill>Tip: name files clearly</Pill>
+              <Pill>{t('folderTip')}</Pill>
+              <Pill>{t('fileNameTip')}</Pill>
             </div>
           </div>
         ),
       },
       {
         id: "platforms",
-        title: "Gov Platforms",
+        title: t('govPlatforms'),
         icon: Globe,
         render: () => (
           <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900">Digital Ecosystem</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900">{t('digitalEcosystem')}</h2>
 
             <div className="grid gap-3">
               {[
-                { name: "eGov.kz", desc: "Main portal for government services." },
-                { name: "cabinet.salyk.kz", desc: "Taxpayer cabinet for reporting & notices." },
-                { name: "enbek.kz", desc: "Employment contracts and labor exchange." },
-                { name: "Open Data", desc: "Statistics and public registries." },
+                { name: "eGov.kz", desc: t('egovDesc') },
+                { name: "cabinet.salyk.kz", desc: t('salykDesc') },
+                { name: "enbek.kz", desc: t('enbekDesc') },
+                { name: "Open Data", desc: t('openDataDesc') },
               ].map((site) => (
                 <a
                   key={site.name}
@@ -219,30 +223,26 @@ export const HandbookPage = () => {
       },
       {
         id: "taxes",
-        title: "Tax Regimes",
+        title: t('taxRegimes'),
         icon: DollarSign,
         render: () => (
           <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900">Understanding Taxes</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900">{t('understandingTaxes')}</h2>
             <p className="text-slate-700">
-              Choosing the right regime saves money. Many small businesses start with
-              Simplified Declaration.
+              {t('taxRegimeText')}
             </p>
 
             <div className="space-y-3">
-              <AccordionItem title="Simplified Declaration (3%)" defaultOpen>
-                Most popular: pay 3% of turnover semi-annually. Has limits by turnover and
-                employees.
+              <AccordionItem title={t('simplifiedTitle')} defaultOpen>
+                {t('simplifiedDesc')}
               </AccordionItem>
 
-              <AccordionItem title="Retail Tax (4% / 8%)">
-                For certain sectors (often restaurants): different rates for sales to
-                individuals vs companies.
+              <AccordionItem title={t('retailTaxTitle')}>
+                {t('retailTaxDesc')}
               </AccordionItem>
 
-              <AccordionItem title="General Regime (10% / 20%)">
-                Paid on net profit (Revenue − Expenses). Useful if you have high confirmed
-                expenses.
+              <AccordionItem title={t('generalRegimeTitle')}>
+                {t('generalRegimeDesc')}
               </AccordionItem>
             </div>
           </div>
@@ -250,24 +250,24 @@ export const HandbookPage = () => {
       },
       {
         id: "faq",
-        title: "Common Mistakes",
+        title: t('commonMistakes'),
         icon: HelpCircle,
         render: () => (
           <div className="space-y-5">
-            <h2 className="text-2xl font-extrabold text-slate-900">Avoid These Mistakes</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900">{t('avoidMistakes')}</h2>
 
             {[
               {
-                q: "Forgetting to submit zero-reports",
-                a: "Even with no income, you must submit reports with zeros, otherwise accounts can be blocked.",
+                q: t('mistake1Q'),
+                a: t('mistake1A'),
               },
               {
-                q: "Mixing personal and business money",
-                a: "Especially for LLPs. Treat business money as separate from your personal wallet.",
+                q: t('mistake2Q'),
+                a: t('mistake2A'),
               },
               {
-                q: "Ignoring social payments",
-                a: "You must pay pension/social insurance for yourself and employees monthly (depending on your status).",
+                q: t('mistake3Q'),
+                a: t('mistake3A'),
               },
             ].map((item) => (
               <div
@@ -282,7 +282,7 @@ export const HandbookPage = () => {
         ),
       },
     ],
-    []
+    [t]
   );
 
   const [activeChapter, setActiveChapter] = useState<ChapterId>(chapters[0].id);
@@ -297,10 +297,10 @@ export const HandbookPage = () => {
         <div className="border-b border-slate-200 bg-slate-50 py-10">
           <div className="container-page">
             <h1 className="text-4xl font-extrabold text-slate-900 mb-3">
-              Entrepreneur’s Handbook
+              {t('handbookTitle')}
             </h1>
             <p className="text-lg text-slate-600 max-w-2xl">
-              A structured guide to starting and running a business in Kazakhstan.
+              {t('handbookSubtitle')}
             </p>
           </div>
         </div>
@@ -317,11 +317,10 @@ export const HandbookPage = () => {
                     <button
                       key={c.id}
                       onClick={() => setActiveChapter(c.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition ${
-                        isActive
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition ${isActive
                           ? "bg-blue-50 text-blue-700 border border-blue-100"
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
-                      }`}
+                        }`}
                       type="button"
                     >
                       <ActiveIcon
@@ -342,11 +341,11 @@ export const HandbookPage = () => {
                 {/* Bottom CTA row */}
                 <div className="border-t border-slate-100 p-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-slate-50/40">
                   <div className="text-sm text-slate-600">
-                    Next: keep going chapter by chapter and ask questions in Community.
+                    {t('nextHandbook')}
                   </div>
                   <Link to="/feed">
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2">
-                      Open Community
+                      {t('openCommunity')}
                     </Button>
                   </Link>
                 </div>

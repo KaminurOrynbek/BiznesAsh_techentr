@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 // shadcn/ui
 import { Button } from "../components/ui/button";
@@ -29,13 +31,14 @@ export const RegisterPage = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t('passwordsDoNotMatch'));
       return;
     }
 
@@ -46,7 +49,7 @@ export const RegisterPage = () => {
       // Redirect to verification with email state
       navigate("/verify-email", { state: { email } });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+      setError(err instanceof Error ? err.message : t('registrationFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +62,13 @@ export const RegisterPage = () => {
       <div className="absolute inset-0 opacity-40 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.35),transparent_55%)]" />
       <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
       <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
+
+      {/* Language Switcher in top right */}
+      <div className="absolute top-4 right-4 z-50">
+        <div className="bg-white/20 backdrop-blur-md rounded-lg p-1">
+          <LanguageSwitcher />
+        </div>
+      </div>
 
       <div className="relative min-h-screen flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md bg-white/95 backdrop-blur border-white/20 shadow-2xl">
@@ -75,10 +85,10 @@ export const RegisterPage = () => {
 
             <div className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center text-slate-900">
-                Create an account
+                {t('createAccountTitle')}
               </CardTitle>
               <CardDescription className="text-center">
-                Join the BiznesAsh community to start your journey
+                {t('createAccountDesc')}
               </CardDescription>
             </div>
           </CardHeader>
@@ -86,14 +96,14 @@ export const RegisterPage = () => {
           <CardContent className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <AlertTitle>Registration error</AlertTitle>
+                <AlertTitle>{t('registrationError')}</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('usernameLabel')}</Label>
                 <Input
                   id="username"
                   placeholder="Almas K."
@@ -105,7 +115,7 @@ export const RegisterPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -118,7 +128,7 @@ export const RegisterPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('passwordLabel')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -131,7 +141,7 @@ export const RegisterPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -148,18 +158,18 @@ export const RegisterPage = () => {
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating account..." : "Sign Up"}
+                {isLoading ? t('creatingAccount') : t('signUpButton')}
               </Button>
             </form>
 
             <div className="mt-4 text-xs text-center text-slate-600">
-              By clicking continue, you agree to our{" "}
+              {t('agreeTo')}{" "}
               <span className="underline hover:text-slate-900 cursor-pointer">
-                Terms of Service
+                {t('terms')}
               </span>{" "}
-              and{" "}
+              {t('and')}{" "}
               <span className="underline hover:text-slate-900 cursor-pointer">
-                Privacy Policy
+                {t('privacy')}
               </span>
               .
             </div>
@@ -167,12 +177,12 @@ export const RegisterPage = () => {
 
           <CardFooter className="flex justify-center">
             <div className="text-sm text-slate-600">
-              Already have an account?{" "}
+              {t('alreadyHaveAccount')}{" "}
               <Link
                 to="/login"
                 className="font-semibold text-blue-700 hover:text-blue-600"
               >
-                Sign in
+                {t('signInLink')}
               </Link>
             </div>
           </CardFooter>

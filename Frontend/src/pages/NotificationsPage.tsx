@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { notificationService, type Notification } from '../services/notificationService';
 import { useAuth } from '../context/useAuth';
 import {
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 import { Navbar } from '../components';
 
 export const NotificationsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -31,7 +33,7 @@ export const NotificationsPage: React.FC = () => {
       const data = await notificationService.getNotifications(user.id);
       setNotifications(data);
     } catch (err) {
-      setError("Failed to load notifications");
+      setError(t('failedLoadNotifications'));
     } finally {
       setIsLoading(false);
     }
@@ -62,23 +64,23 @@ export const NotificationsPage: React.FC = () => {
         className="font-bold hover:underline text-blue-600"
         onClick={(e) => e.stopPropagation()}
       >
-        {n.actorUsername || 'Someone'}
+        {n.actorUsername || t('someone')}
       </Link>
     );
 
     switch (n.type) {
       case 'POST_LIKE':
-        return <>{actor} liked your post</>;
+        return <>{actor} {t('likedYourPost')}</>;
       case 'COMMENT_LIKE':
-        return <>{actor} liked your comment</>;
+        return <>{actor} {t('likedYourComment')}</>;
       case 'COMMENT':
         return (
           <div>
-            <p>{actor} commented: "{n.metadata?.content || '...'}"</p>
+            <p>{actor} {t('commented')}: "{n.metadata?.content || '...'}"</p>
           </div>
         );
       case 'NEW_POST':
-        return <>{actor} created a new post</>;
+        return <>{actor} {t('createdNewPost')}</>;
       default:
         return n.message;
     }
@@ -120,7 +122,7 @@ export const NotificationsPage: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Bell className="w-8 h-8 text-blue-600" />
-            Notifications
+            {t('notificationsTitle')}
           </h1>
         </div>
 
@@ -136,8 +138,8 @@ export const NotificationsPage: React.FC = () => {
             <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bell className="w-8 h-8 text-gray-400" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No notifications yet</h2>
-            <p className="text-gray-500">We'll let you know when something happens!</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('noNotificationsYet')}</h2>
+            <p className="text-gray-500">{t('letYouKnow')}</p>
           </div>
         ) : (
           <div className="space-y-3">

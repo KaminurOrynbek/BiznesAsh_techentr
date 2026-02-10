@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { notificationService } from "../services/notificationService";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +20,7 @@ import { Loader2, CheckCircle2, AlertCircle, RefreshCcw, ArrowLeft } from "lucid
 const LOGO_SRC = new URL("../assets/logo.jpeg", import.meta.url).toString();
 
 export const VerifyEmailPage = () => {
+    const { t } = useTranslation();
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [error, setError] = useState<string>("");
     const [success, setSuccess] = useState<string>("");
@@ -82,12 +84,12 @@ export const VerifyEmailPage = () => {
 
         const code = otp.join("");
         if (code.length < 6) {
-            setError("Please enter the full 6-digit code");
+            setError(t('enterFullCode'));
             return;
         }
 
         if (!email) {
-            setError("Email is missing. Moving back to registration...");
+            setError(t('emailMissing'));
             setTimeout(() => navigate("/register"), 2000);
             return;
         }
@@ -95,10 +97,10 @@ export const VerifyEmailPage = () => {
         setIsLoading(true);
         try {
             await notificationService.verifyEmail(email, code);
-            setSuccess("Account verified successfully! Redirecting to login...");
+            setSuccess(t('accountVerifiedSuccess'));
             setTimeout(() => navigate("/login"), 2500);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
+            setError(err instanceof Error ? err.message : t('invalidCode'));
             // Clear OTP on error to let user re-enter
             setOtp(["", "", "", "", "", ""]);
             inputRefs.current[0]?.focus();
@@ -114,9 +116,9 @@ export const VerifyEmailPage = () => {
         setError("");
         try {
             await notificationService.resendVerificationEmail(email);
-            setSuccess("A new code has been sent to your email!");
+            setSuccess(t('resendSuccess'));
         } catch (err: unknown) {
-            setError("Failed to resend code. Please try again later.");
+            setError(t('resendFailed'));
         } finally {
             setResending(false);
             // Auto-clear success message after 5 seconds
@@ -160,11 +162,11 @@ export const VerifyEmailPage = () => {
 
                         <div className="space-y-2">
                             <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
-                                Confirm your email
+                                {t('confirmEmailTitle')}
                             </CardTitle>
                             <CardDescription className="text-blue-100/60 text-base max-w-xs mx-auto">
-                                We've sent a 6-digit verification code to
-                                <span className="block font-semibold text-blue-400 mt-1">{email || "your address"}</span>
+                                {t('confirmEmailDesc')}
+                                <span className="block font-semibold text-blue-400 mt-1">{email || t('yourAddress')}</span>
                             </CardDescription>
                         </div>
                     </CardHeader>
@@ -179,7 +181,7 @@ export const VerifyEmailPage = () => {
                                 >
                                     <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-400">
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle className="font-bold">Error</AlertTitle>
+                                        <AlertTitle className="font-bold">{t('error')}</AlertTitle>
                                         <AlertDescription>{error}</AlertDescription>
                                     </Alert>
                                 </motion.div>
@@ -192,7 +194,7 @@ export const VerifyEmailPage = () => {
                                 >
                                     <Alert className="bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
                                         <CheckCircle2 className="h-4 w-4" />
-                                        <AlertTitle className="font-bold">Success</AlertTitle>
+                                        <AlertTitle className="font-bold">{t('success')}</AlertTitle>
                                         <AlertDescription>{success}</AlertDescription>
                                     </Alert>
                                 </motion.div>
@@ -234,10 +236,10 @@ export const VerifyEmailPage = () => {
                                     {isLoading ? (
                                         <span className="flex items-center gap-2">
                                             <Loader2 className="h-5 w-5 animate-spin" />
-                                            Verifying...
+                                            {t('sending')}
                                         </span>
                                     ) : (
-                                        "Verify Account"
+                                        t('verifyAccount')
                                     )}
                                 </Button>
 
@@ -249,7 +251,7 @@ export const VerifyEmailPage = () => {
                                         className="flex items-center gap-2 text-white/60 hover:text-white transition-colors disabled:opacity-30"
                                     >
                                         <RefreshCcw className={`h-4 w-4 ${resending ? 'animate-spin' : ''}`} />
-                                        {resending ? "Sending..." : "Resend Code"}
+                                        {resending ? t('sending') : t('resendCode')}
                                     </button>
 
                                     <Link
@@ -257,7 +259,7 @@ export const VerifyEmailPage = () => {
                                         className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                                     >
                                         <ArrowLeft className="h-4 w-4" />
-                                        Back to Login
+                                        {t('backToLogin')}
                                     </Link>
                                 </div>
                             </div>
@@ -266,7 +268,7 @@ export const VerifyEmailPage = () => {
 
                     <CardFooter className="bg-white/5 border-t border-white/10 px-8 py-4 flex justify-center">
                         <p className="text-white/30 text-xs">
-                            Secure Email Verification &bull; BiznesAsh &copy; 2026
+                            {t('secureVerification')} &bull; BiznesAsh &copy; 2026
                         </p>
                     </CardFooter>
                 </Card>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { MessageSquare, Share2, MoreHorizontal, Send, Sparkles, Trash2, Search, X, ThumbsUp } from "lucide-react";
 
 import { Card, Button, TextArea, Navbar, Loading, Alert } from "../components";
@@ -10,6 +11,7 @@ import { useAuth } from "../context/useAuth";
 const TRENDING = ["#Registration", "#Taxes2026", "#Grants", "#Marketing", "#Hiring"];
 
 export const FeedPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +71,7 @@ export const FeedPage: React.FC = () => {
   };
 
   const handleDelete = async (postId: string): Promise<void> => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    if (!window.confirm(t('deletePostConfirm'))) return;
     try {
       await contentService.deletePost(postId);
       setPosts((prev) => prev.filter((p) => p.id !== postId));
@@ -143,10 +145,10 @@ export const FeedPage: React.FC = () => {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-                  Founder Feed
+                  {t('founderFeed')}
                 </h1>
                 <p className="mt-2 text-slate-600">
-                  Connect, ask questions, and share your journey.
+                  {t('feedSubtitle')}
                 </p>
               </div>
 
@@ -155,7 +157,7 @@ export const FeedPage: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search posts..."
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-white border border-slate-200 rounded-full pl-10 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
@@ -176,7 +178,7 @@ export const FeedPage: React.FC = () => {
                     onClick={() => setTopicFilter(null)}
                     className="whitespace-nowrap rounded-full px-4"
                   >
-                    Clear topic
+                    {t('clearTopic')}
                   </Button>
                 )}
               </div>
@@ -197,7 +199,7 @@ export const FeedPage: React.FC = () => {
                     </div>
                     <div className="flex-1 space-y-4">
                       <TextArea
-                        placeholder="Share your idea or ask a question..."
+                        placeholder={t('shareIdeaPlaceholder')}
                         value={newPostContent}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                           setNewPostContent(e.target.value)
@@ -206,7 +208,7 @@ export const FeedPage: React.FC = () => {
                       />
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-slate-500">
-                          Tip: choose a topic on the right to filter
+                          {t('feedTip')}
                         </div>
                         <Button
                           variant="primary"
@@ -215,7 +217,7 @@ export const FeedPage: React.FC = () => {
                         >
                           <span className="inline-flex items-center gap-2">
                             <Send className="h-4 w-4" />
-                            Post
+                            {t('postButton')}
                           </span>
                         </Button>
                       </div>
@@ -252,7 +254,7 @@ export const FeedPage: React.FC = () => {
                               <button
                                 onClick={() => handleDelete(post.id)}
                                 className="h-8 w-8 rounded-full hover:bg-red-50 flex items-center justify-center group"
-                                title="Delete Post"
+                                title={t('deletePost')}
                               >
                                 <Trash2 className="h-4 w-4 text-slate-400 group-hover:text-red-500 transition-colors" />
                               </button>
@@ -287,7 +289,7 @@ export const FeedPage: React.FC = () => {
                               }}
                             >
                               <ThumbsUp className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-                              <span className="font-medium">Like {post.likesCount > 0 && `(${post.likesCount})`}</span>
+                              <span className="font-medium">{t('like')} {post.likesCount > 0 && `(${post.likesCount})`}</span>
                             </Button>
                           </div>
 
@@ -295,7 +297,7 @@ export const FeedPage: React.FC = () => {
                             <Button variant="ghost">
                               <span className="inline-flex items-center gap-2">
                                 <MessageSquare className="h-4 w-4" />
-                                {post.commentsCount} Comments
+                                {post.commentsCount} {t('comments')}
                               </span>
                             </Button>
                           </Link>
@@ -303,7 +305,7 @@ export const FeedPage: React.FC = () => {
                           <Button variant="ghost">
                             <span className="inline-flex items-center gap-2">
                               <Share2 className="h-4 w-4" />
-                              Share
+                              {t('share')}
                             </span>
                           </Button>
                         </div>
@@ -314,7 +316,7 @@ export const FeedPage: React.FC = () => {
 
                 {!isLoading && filteredPosts.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-slate-600">
-                    No posts found.
+                    {t('noPosts')}
                   </div>
                 )}
               </div>
@@ -322,7 +324,7 @@ export const FeedPage: React.FC = () => {
               <div className="space-y-6">
                 <Card className="border border-slate-200 bg-white shadow-sm p-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-900">Trending Topics</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">{t('trendingTopics')}</h3>
                     <Sparkles className="h-4 w-4 text-slate-400" />
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -339,21 +341,21 @@ export const FeedPage: React.FC = () => {
                 </Card>
 
                 <Card className="border-none bg-gradient-to-br from-blue-600 to-teal-600 text-white shadow-sm p-6">
-                  <h3 className="text-lg font-bold">Need expert help?</h3>
-                  <p className="mt-2 text-sm text-blue-100">Get a consultation with a legal or tax expert.</p>
+                  <h3 className="text-lg font-bold">{t('needExpertHelp')}</h3>
+                  <p className="mt-2 text-sm text-blue-100">{t('expertHelpSubtitle')}</p>
                   <div className="mt-5">
                     <Link to="/handbook">
-                      <Button variant="secondary" className="w-full">Book Consultation</Button>
+                      <Button variant="secondary" className="w-full">{t('bookConsultation')}</Button>
                     </Link>
                   </div>
                 </Card>
 
                 <Card className="border border-slate-200 bg-white shadow-sm p-6">
-                  <h4 className="font-semibold text-slate-900">Quick links</h4>
+                  <h4 className="font-semibold text-slate-900">{t('quickLinks')}</h4>
                   <div className="mt-3 grid gap-2 text-sm">
-                    <Link to="/handbook" className="text-slate-600 hover:text-blue-600">Handbook</Link>
-                    <Link to="/notifications" className="text-slate-600 hover:text-blue-600">Notifications</Link>
-                    <Link to="/profile" className="text-slate-600 hover:text-blue-600">Your profile</Link>
+                    <Link to="/handbook" className="text-slate-600 hover:text-blue-600">{t('handbook')}</Link>
+                    <Link to="/notifications" className="text-slate-600 hover:text-blue-600">{t('notifications')}</Link>
+                    <Link to="/profile" className="text-slate-600 hover:text-blue-600">{t('yourProfile')}</Link>
                   </div>
                 </Card>
               </div>
