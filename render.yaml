@@ -1,0 +1,156 @@
+services:
+  # -------------------------------------------------------------------
+  # INFRASTRUCTURE
+  # -------------------------------------------------------------------
+  - type: web
+    name: biznesash-redis
+    env: docker
+    dockerContext: .
+    dockerCommand: "redis-server --allow-empty-password yes"
+    image: bitnami/redis:latest
+    plan: free
+    region: oregon # adjust to your preferred region
+
+  - type: web
+    name: biznesash-nats
+    env: docker
+    image: nats:latest
+    plan: free
+    region: oregon
+
+  # -------------------------------------------------------------------
+  # MICROSERVICES (Go)
+  # -------------------------------------------------------------------
+  - type: web
+    name: api-gateway
+    env: go
+    rootDir: APIGateway
+    buildCommand: go build -mod=vendor -o main ./cmd/gateway
+    startCommand: ./main
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: JWT_SECRET
+        value: dev_biznesash_secret_2026_change_later_!@#_A1b2C3d4
+      - key: USER_SERVICE_URL
+        fromService:
+          name: user-service
+          type: web
+          property: hostport
+      - key: CONTENT_SERVICE_URL
+        fromService:
+          name: content-service
+          type: web
+          property: hostport
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          name: notification-service
+          type: web
+          property: hostport
+
+  - type: web
+    name: user-service
+    env: go
+    rootDir: UserService
+    buildCommand: go build -mod=vendor -o main ./cmd/user
+    startCommand: ./main
+    plan: free
+    envVars:
+      - key: GRPC_PORT
+        value: 50051
+      - key: JWT_SECRET
+        value: dev_biznesash_secret_2026_change_later_!@#_A1b2C3d4
+      - key: NATS_URL
+        fromService:
+          name: biznesash-nats
+          type: web
+          property: hostport
+      # Add DB vars here after creating managed Postgres manually or via blueprint if supported
+
+  - type: web
+    name: content-service
+    env: go
+    rootDir: ContentService
+    buildCommand: go build -mod=vendor -o main ./cmd/content
+    startCommand: ./main
+    plan: free
+    envVars:
+      - key: GRPC_PORT
+        value: 50055
+      - key: REDIS_ADDR
+        fromService:
+          name: biznesash-redis
+          type: web
+          property: hostport
+      - key: NATS_URL
+        fromService:
+          name: biznesash-nats
+          type: web
+          property: hostport
+
+  - type: web
+    name: notification-service
+    env: go
+    rootDir: NotificationService
+    buildCommand: go build -mod=vendor -o main ./cmd/notification
+    startCommand: ./main
+    plan: free
+    envVars:
+      - key: GRPC_PORT
+        value: 50053
+      - key: NATS_URL
+        fromService:
+          name: biznesash-nats
+          type: web
+          property: hostport
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USERNAME
+        value: kaminurorinbek@gmail.com
+      - key: SMTP_PASSWORD
+        sync: false # User needs to provide this in Render UI
+      - key: SERVICE_EMAIL
+        value: kaminurorinbek@gmail.com
+
+  - type: web
+    name: consultation-service
+    env: go
+    rootDir: ConsultationService
+    buildCommand: go build -mod=vendor -o main ./cmd
+    startCommand: ./main
+    plan: free
+
+  - type: web
+    name: payment-service
+    env: go
+    rootDir: PaymentService
+    buildCommand: go build -mod=vendor -o main ./cmd
+    startCommand: ./main
+    plan: free
+
+  - type: web
+    name: subscription-service
+    env: go
+    rootDir: SubscriptionService
+    buildCommand: go build -mod=vendor -o main ./cmd
+    startCommand: ./main
+    plan: free
+
+  # -------------------------------------------------------------------
+  # FRONTEND
+  # -------------------------------------------------------------------
+  - type: static
+    name: biznesash-frontend
+    env: static
+    rootDir: Frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: api-gateway
+          type: web
+          property: url
