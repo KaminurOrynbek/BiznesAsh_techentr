@@ -32,7 +32,7 @@ export const NotificationsPage: React.FC = () => {
       setIsLoading(true);
       const data = await notificationService.getNotifications(user.id);
       setNotifications(data);
-    } catch (err) {
+    } catch  {
       setError(t('failedLoadNotifications'));
     } finally {
       setIsLoading(false);

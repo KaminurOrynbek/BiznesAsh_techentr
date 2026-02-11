@@ -10,7 +10,7 @@ import {
   FeedPage,
   PostDetailPage,
   NotificationsPage,
-  HandbookPage,
+  Handbook,
   ProfilePage,
   SubscriptionPage,
   ExpertListingPage,
@@ -34,7 +34,7 @@ function App() {
             <Route path="/verify-email" element={<VerifyEmailPage />} />
 
             {/* Public (or make protected if you want) */}
-            <Route path="/handbook" element={<HandbookPage />} />
+            <Route path="/handbook" element={<Handbook />} />
             <Route path="/contact" element={<ContactPage />} />
 
             {/* Protected */}

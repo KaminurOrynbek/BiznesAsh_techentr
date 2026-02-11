@@ -1,359 +1,436 @@
-import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-
-
+import React, { useState } from "react";
 import {
-  Book,
-  FileText,
-  Globe,
-  DollarSign,
-  HelpCircle,
-  ChevronRight,
-  Download,
-  ChevronDown,
+  Book, 
+  Target, 
+  FileText, 
+  Briefcase, 
+  DollarSign, 
+  CreditCard, 
+  Cpu, 
+  GraduationCap, 
+  Users, 
+  Heart, 
+  MapPin, 
+  AlertTriangle,
+  Lightbulb,
+  CheckSquare,
 } from "lucide-react";
-import { Navbar, Card, Button } from "../components";
 
-/**
- * Small helper styles that match your existing "rounded-xl2" feel.
- * No shadcn required.
- */
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { ScrollArea } from "../components/ui/scroll-area";
 
-type ChapterId = "registration" | "documents" | "platforms" | "taxes" | "faq";
+// --------------------
+// TYPES
+// --------------------
 
-type Chapter = {
-  id: ChapterId;
+type Language = "en" | "ru" | "kz";
+
+interface ChapterContent {
+  id: string;
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  render: () => React.ReactNode;
-};
+  icon: React.ElementType;
+  purpose?: string;
+  description: string;
+  actions: string[];
+  examples?: string[];
+  tip?: string;
+  details?: React.ReactNode;
+}
 
-const Pill = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 text-xs font-semibold border border-transparent dark:border-slate-700">
-    {children}
-  </span>
-);
+// --------------------
+// DATA
+// --------------------
 
-const DocRow = ({ name, desc }: { name: string; desc: string }) => {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-      <div className="flex items-center gap-3">
-        <div className="h-8 w-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center">
-          <FileText className="h-4 w-4 text-slate-400" />
+const HANDBOOK_DATA: Record<Language, ChapterContent[]> = {
+  en: [
+    {
+      id: "niche",
+      title: "1. Define Your Business Niche",
+      icon: Target,
+      purpose: "Strategic thinking",
+      description: "Before registering a business, it is essential to understand what you will sell and who your customers are. This decision affects taxation, registration form, and required licenses.",
+      actions: [
+        "Decide whether you will sell goods or services",
+        "Identify your skills, experience, or resources",
+        "Analyze demand in your area (competitors, customer needs)"
+      ],
+      examples: [
+        "A teacher can open an educational center",
+        "An accountant can provide accounting and audit services",
+        "A barista can offer coffee-to-go services"
+      ],
+      tip: "Many successful small businesses in Kazakhstan start as home-based services to reduce costs in the first year."
+    },
+    {
+      id: "plan",
+      title: "2. Business Plan Draft",
+      icon: FileText,
+      purpose: "Financial and risk awareness",
+      description: "You don't need a 100-page document, but you need to know your numbers. Failing to plan is planning to fail.",
+      actions: [
+        "Calculate startup costs (equipment, rent, licenses)",
+        "Identify funding sources (savings, loans, grants)",
+        "Draft a development strategy for the first 6-12 months",
+        "List potential risks and how to mitigate them"
+      ],
+      tip: "At early stages, working from home can significantly reduce costs. Don't rent an office unless absolutely necessary."
+    },
+    {
+      id: "types",
+      title: "3. Types of Entrepreneurship",
+      icon: Briefcase,
+      purpose: "Legal structure",
+      description: "Choosing the right legal form is crucial. In Kazakhstan, the two most common forms are Individual Entrepreneur (IE/IP) and Limited Liability Partnership (LLP/TOO).",
+      actions: [
+        "Review eligibility for IE (Citizens, Kandas, EAEU residents)",
+        "Determine if you need partners (Requires LLP)",
+        "Check liability differences (IE = Personal liability, LLP = Limited to capital)"
+      ],
+      details: (
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <Card className="bg-blue-50 border-blue-100">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-blue-900">Individual Entrepreneur (IE)</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-blue-800">
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Fast registration online (eGov, Bank apps)</li>
+                <li>No office required</li>
+                <li>Simpler reporting</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-50 border-slate-100">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-slate-900">LLP (Partnership)</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-slate-700">
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Best for partners & scaling</li>
+                <li>Requires Charter (rules)</li>
+                <li>Liability limited to capital</li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
-        <div>
-          <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{name}</div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">{desc}</div>
+      )
+    },
+    {
+      id: "tax",
+      title: "4. Taxation Regimes",
+      icon: DollarSign,
+      purpose: "Financial Efficiency",
+      description: "Choosing the right tax regime can save you millions. Most small businesses choose a Special Tax Regime (STR) over the General Regime.",
+      actions: [
+        "Estimate your annual turnover",
+        "Count expected employees",
+        "Select a regime: Patent, Simplified Declaration, or Retail Tax"
+      ],
+      details: (
+        <div className="space-y-3 mt-4">
+          <div className="p-3 border rounded-lg bg-white">
+            <div className="font-semibold">Simplified Declaration</div>
+            <div className="text-sm text-slate-600">3% tax on turnover. Limit: ~24,038 MCI income. Up to 30 employees.</div>
+          </div>
+          <div className="p-3 border rounded-lg bg-white">
+            <div className="font-semibold">Patent</div>
+            <div className="text-sm text-slate-600">1% tax paid in advance. No employees allowed. Good for solo artisans.</div>
+          </div>
+          <div className="p-3 border rounded-lg bg-white">
+            <div className="font-semibold">Retail Tax</div>
+            <div className="text-sm text-slate-600">4% (individuals) / 8% (companies). Higher turnover limits. Specific sectors only.</div>
+          </div>
         </div>
-      </div>
-
-      <button
-        type="button"
-        className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition"
-        aria-label={t('download', { defaultValue: 'Download' })}
-        title={t('downloadPlaceholder', { defaultValue: 'Download (placeholder)' })}
-      >
-        <Download className="h-4 w-4 text-slate-400" />
-      </button>
-    </div>
-  );
+      )
+    },
+    {
+      id: "kkm",
+      title: "5. Cash Registers (KKM)",
+      icon: CreditCard,
+      purpose: "Compliance",
+      description: "If you accept cash or bank cards, you MUST have a Cash Register (KKM). It transmits data to tax authorities.",
+      actions: [
+        "Register a KKM before accepting first payment",
+        "Choose between physical device or mobile app (Webkassa, Rekassa, etc.)",
+        "Ensure it supports QR payments if needed"
+      ],
+      tip: "KKM must be registered before you start working with clients to avoid fines."
+    },
+    {
+      id: "automation",
+      title: "6. Outsourcing & Automation",
+      icon: Cpu,
+      purpose: "Efficiency & Scalability",
+      description: "You don't need to hire full-time staff for everything. Use modern tools and outsourcing to keep costs low.",
+      actions: [
+        "Outsource Accounting, Marketing, and IT",
+        "Use bots (Telegram/WhatsApp) for customer FAQs",
+        "Implement a CRM system early"
+      ],
+      tip: "Pay for results, not just for employees sitting in an office."
+    },
+    {
+      id: "grants",
+      title: "7. Grants & State Support",
+      icon: GraduationCap,
+      purpose: "Funding & Education",
+      description: "The government offers training and non-repayable grants to support new businesses.",
+      actions: [
+        "Check 'Bastau Business' on skills.enbek.kz (Free training)",
+        "Apply for grants up to 400 MCI (for specific social groups)",
+        "Prepare documents for grant usage (Equipment, Rent, etc.)"
+      ]
+    },
+    {
+      id: "support",
+      title: "8. Non-Financial Support",
+      icon: Users,
+      purpose: "Consulting",
+      description: "Atameken and Entrepreneur Service Centers (ЦОП) provide free consulting for businesses.",
+      actions: [
+        "Visit a local CSC (ЦОП) office",
+        "Get help with Tax Reporting",
+        "Get help with Business Planning"
+      ],
+      tip: "These services are funded by the state and are free for entrepreneurs."
+    },
+    {
+      id: "women",
+      title: "9. Women Entrepreneurship",
+      icon: Heart,
+      purpose: "Inclusive Growth",
+      description: "Specific centers exist to support women founders with training, mentorship, and business evaluation.",
+      actions: [
+        "Find a Women Entrepreneurship Development Center",
+        "Join networking events",
+        "Apply for specific mentorship programs"
+      ]
+    },
+    {
+      id: "rural",
+      title: "10. One Village – One Product",
+      icon: MapPin,
+      purpose: "Rural Development",
+      description: "A program designed to develop rural production and promote local products to wider markets.",
+      actions: [
+        "Identify unique local raw materials",
+        "Apply for branding and marketing support",
+        "Look for grants up to 5 million KZT for production"
+      ]
+    },
+    {
+      id: "mistakes",
+      title: "11. Common Mistakes",
+      icon: AlertTriangle,
+      purpose: "Risk Avoidance",
+      description: "Learn from others' failures to save time and money.",
+      actions: [
+        "Do NOT mix personal and business money (especially LLP)",
+        "Do NOT forget to submit zero-reports if you have no income",
+        "Do NOT ignore social payments (Pension/Social insurance)"
+      ],
+      tip: "Even if you earned 0 KZT, you must report it. Silence leads to blocked accounts."
+    }
+  ],
+  ru: [], // To be populated later
+  kz: []  // To be populated later
 };
 
-const AccordionItem = ({
-  title,
-  children,
-  defaultOpen = false,
-}: {
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) => {
-  const [open, setOpen] = useState(defaultOpen);
+// --------------------
+// COMPONENT
+// --------------------
+
+export function Handbook() {
+  const [activeLang, setActiveLang] = useState<Language>("en");
+  const contentData =
+    HANDBOOK_DATA[activeLang].length > 0
+      ? HANDBOOK_DATA[activeLang]
+      : HANDBOOK_DATA.en;
+
+  const [activeChapterId, setActiveChapterId] = useState(
+    contentData[0].id
+  );
+
+  const activeContent =
+    contentData.find((c) => c.id === activeChapterId) ||
+    contentData[0];
 
   return (
-    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
-      >
-        <span className="font-semibold text-slate-900 dark:text-slate-100">{title}</span>
-        <ChevronDown
-          className={`h-4 w-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {open && <div className="px-4 pb-4 text-sm text-slate-700 dark:text-slate-300">{children}</div>}
-    </div>
-  );
-};
-
-export const HandbookPage = () => {
-  const { t } = useTranslation();
-  const chapters: Chapter[] = useMemo(
-    () => [
-      {
-        id: "registration",
-        title: t('registrationSteps'),
-        icon: Book,
-        render: () => (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3 transition-colors">
-                {t('step1Legal')}
-              </h2>
-              <p className="text-slate-700 dark:text-slate-400 mb-4 transition-colors">
-                {t('decideLegal')}
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <Card className="p-0 overflow-hidden">
-                  <div className="p-5">
-                    <div className="font-bold text-slate-900 dark:text-white mb-2 transition-colors">
-                      {t('ieTitle')}
-                    </div>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                      <li>{t('ieSimpler')}</li>
-                      <li>{t('ieLowerFines')}</li>
-                      <li>{t('ieLiability')}</li>
-                      <li>{t('ieSolo')}</li>
-                    </ul>
-                  </div>
-                </Card>
-
-                <Card className="p-0 overflow-hidden">
-                  <div className="p-5">
-                    <div className="font-bold text-slate-900 dark:text-white mb-2 transition-colors">
-                      {t('llpTitle')}
-                    </div>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                      <li>{t('llpSeparate')}</li>
-                      <li>{t('llpLimited')}</li>
-                      <li>{t('llpReporting')}</li>
-                      <li>{t('llpScaling')}</li>
-                    </ul>
-                  </div>
-                </Card>
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
-              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3 transition-colors">
-                {t('step2Register')}
-              </h2>
-              <p className="text-slate-700 dark:text-slate-400 mb-4 transition-colors">
-                {t('egovNotice')}
-              </p>
-
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 transition-colors">
-                <div className="font-bold text-blue-900 dark:text-blue-300 mb-2">{t('requiredEgov')}</div>
-                <ul className="list-disc pl-5 space-y-1 text-sm text-blue-800 dark:text-blue-400/90">
-                  <li>{t('validEds')}</li>
-                  <li>{t('registeredPhone')}</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "documents",
-        title: t('requiredDocuments'),
-        icon: FileText,
-        render: () => (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('docChecklist')}</h2>
-            <p className="text-slate-700 dark:text-slate-400 transition-colors">
-              {t('prepareDocs')}
+    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
+      {/* HEADER */}
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+              <Book className="h-6 w-6 text-blue-600" />
+              Entrepreneur’s Handbook
+            </h1>
+            <p className="text-sm text-slate-500">
+              Step-by-step guidance for Kazakhstan 🇰🇿
             </p>
-
-            <div className="space-y-3">
-              <DocRow name={t('idCard')} desc={t('idCardDesc')} />
-              <DocRow
-                name={t('proofAddress')}
-                desc={t('proofAddressDesc')}
-              />
-              <DocRow name={t('charter')} desc={t('charterDesc')} />
-              <DocRow name={t('founderDecision')} desc={t('founderDecisionDesc')} />
-            </div>
-
-            <div className="pt-2 flex gap-2 flex-wrap">
-              <Pill>{t('folderTip')}</Pill>
-              <Pill>{t('fileNameTip')}</Pill>
-            </div>
           </div>
-        ),
-      },
-      {
-        id: "platforms",
-        title: t('govPlatforms'),
-        icon: Globe,
-        render: () => (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('digitalEcosystem')}</h2>
 
-            <div className="grid gap-3">
-              {[
-                { name: "eGov.kz", desc: t('egovDesc') },
-                { name: "cabinet.salyk.kz", desc: t('salykDesc') },
-                { name: "enbek.kz", desc: t('enbekDesc') },
-                { name: "Open Data", desc: t('openDataDesc') },
-              ].map((site) => (
-                <a
-                  key={site.name}
-                  href="#"
-                  className="block group rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all"
-                >
-                  <div className="p-4 flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {site.name}
-                      </div>
-                      <div className="text-sm text-slate-500 dark:text-slate-400">{site.desc}</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "taxes",
-        title: t('taxRegimes'),
-        icon: DollarSign,
-        render: () => (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('understandingTaxes')}</h2>
-            <p className="text-slate-700 dark:text-slate-400 transition-colors">
-              {t('taxRegimeText')}
-            </p>
-
-            <div className="space-y-3">
-              <AccordionItem title={t('simplifiedTitle')} defaultOpen>
-                {t('simplifiedDesc')}
-              </AccordionItem>
-
-              <AccordionItem title={t('retailTaxTitle')}>
-                {t('retailTaxDesc')}
-              </AccordionItem>
-
-              <AccordionItem title={t('generalRegimeTitle')}>
-                {t('generalRegimeDesc')}
-              </AccordionItem>
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "faq",
-        title: t('commonMistakes'),
-        icon: HelpCircle,
-        render: () => (
-          <div className="space-y-5">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white transition-colors">{t('avoidMistakes')}</h2>
-
-            {[
-              {
-                q: t('mistake1Q'),
-                a: t('mistake1A'),
-              },
-              {
-                q: t('mistake2Q'),
-                a: t('mistake2A'),
-              },
-              {
-                q: t('mistake3Q'),
-                a: t('mistake3A'),
-              },
-            ].map((item) => (
-              <div
-                key={item.q}
-                className="rounded-2xl border border-orange-100 dark:border-orange-900/20 bg-orange-50/50 dark:bg-orange-900/10 p-5 transition-colors"
+          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+            {(["en", "ru", "kz"] as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setActiveLang(lang)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  activeLang === lang
+                    ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
               >
-                <div className="font-bold text-orange-900 dark:text-orange-300 mb-2 transition-colors">{item.q}</div>
-                <div className="text-sm text-slate-700 dark:text-slate-400 transition-colors">{item.a}</div>
-              </div>
+                {lang.toUpperCase()}
+              </button>
             ))}
           </div>
-        ),
-      },
-    ],
-    [t]
-  );
-
-  const [activeChapter, setActiveChapter] = useState<ChapterId>(chapters[0].id);
-  const active = chapters.find((c) => c.id === activeChapter);
-
-  return (
-    <>
-      <Navbar />
-
-      <div className="bg-white dark:bg-slate-950 min-h-[calc(100vh-64px)] transition-colors">
-        {/* Top banner */}
-        <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 py-10">
-          <div className="container-page">
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-3">
-              {t('handbookTitle')}
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
-              {t('handbookSubtitle')}
-            </p>
-          </div>
-        </div>
-
-        <div className="container-page py-8">
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Sidebar */}
-            <div className="w-full md:w-72 flex-shrink-0">
-              <div className="md:sticky md:top-24 space-y-2">
-                {chapters.map((c) => {
-                  const ActiveIcon = c.icon;
-                  const isActive = c.id === activeChapter;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => setActiveChapter(c.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition ${isActive
-                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
-                        }`}
-                      type="button"
-                    >
-                      <ActiveIcon
-                        className={`h-4 w-4 ${isActive ? "text-blue-600" : "text-slate-400"}`}
-                      />
-                      {c.title}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-h-[520px]">
-              <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors">
-                <div className="p-6 md:p-8">{active?.render()}</div>
-
-                {/* Bottom CTA row */}
-                <div className="border-t border-slate-100 dark:border-slate-800 p-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-slate-50/40 dark:bg-slate-800/50 transition-colors">
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
-                    {t('nextHandbook')}
-                  </div>
-                  <Link to="/feed">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2">
-                      {t('openCommunity')}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-    </>
+
+      {/* MAIN */}
+      <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col lg:flex-row gap-10">
+        {/* SIDEBAR */}
+        <aside className="w-full lg:w-72">
+          <div className="sticky top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 font-semibold border-b border-slate-200 dark:border-slate-800">
+              Steps
+            </div>
+
+            <ScrollArea className="h-[500px]">
+              <div className="p-2 space-y-1">
+                {contentData.map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    onClick={() => {
+                      setActiveChapterId(chapter.id);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-xl flex gap-3 transition ${
+                      activeChapterId === chapter.id
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    <chapter.icon className="h-4 w-4 mt-1 shrink-0" />
+                    <span className="text-sm leading-tight">
+                      {chapter.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </aside>
+
+        {/* CONTENT */}
+        <main className="flex-1 max-w-3xl">
+          {/* Title */}
+          <div className="mb-10">
+            {activeContent.purpose && (
+              <Badge className="mb-4 bg-blue-50 text-blue-700 border border-blue-200">
+                {activeContent.purpose}
+              </Badge>
+            )}
+
+            <h2 className="text-4xl font-extrabold mb-6 text-slate-900 dark:text-white leading-tight">
+              {activeContent.title}
+            </h2>
+
+            <div className="border-l-4 border-blue-600 pl-6 text-lg text-slate-700 dark:text-slate-300">
+              {activeContent.description}
+            </div>
+          </div>
+
+          {/* ACTIONS */}
+          <Card className="border-l-4 border-l-teal-500 shadow-sm mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckSquare className="h-5 w-5 text-teal-600" />
+                What You Need to Do
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4">
+                {activeContent.actions.map((action, idx) => (
+                  <li key={idx} className="flex gap-3 items-start">
+                    <div className="h-6 w-6 rounded-full bg-teal-100 text-teal-700 text-xs flex items-center justify-center font-bold mt-1">
+                      {idx + 1}
+                    </div>
+                    <span className="text-slate-800 dark:text-slate-200">
+                      {action}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* DETAILS */}
+          {activeContent.details}
+
+          {/* EXAMPLES */}
+          {activeContent.examples && (
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-8">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-amber-500" />
+                Practical Examples
+              </h3>
+              <div className="space-y-2">
+                {activeContent.examples.map((ex, i) => (
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-lg text-sm"
+                  >
+                    {ex}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TIP */}
+          {activeContent.tip && (
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl p-6 flex gap-4 mb-8">
+              <div className="bg-indigo-100 dark:bg-indigo-800 p-2 rounded-full">
+                <Heart className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h4 className="font-bold mb-1 text-indigo-900 dark:text-indigo-300">
+                  Human Insight
+                </h4>
+                <p className="text-sm text-indigo-800 dark:text-indigo-200">
+                  {activeContent.tip}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* NEXT BUTTON */}
+          <div className="flex justify-end pt-6">
+            <Button
+              onClick={() => {
+                const currentIndex = contentData.findIndex(
+                  (c) => c.id === activeChapterId
+                );
+                if (currentIndex < contentData.length - 1) {
+                  setActiveChapterId(contentData[currentIndex + 1].id);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              disabled={
+                contentData.findIndex(
+                  (c) => c.id === activeChapterId
+                ) === contentData.length - 1
+              }
+            >
+              Next Step →
+            </Button>
+          </div>
+        </main>
+      </div>
+    </div>
   );
-};
+}
