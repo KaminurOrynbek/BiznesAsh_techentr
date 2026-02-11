@@ -142,7 +142,7 @@ services:
   # -------------------------------------------------------------------
   # FRONTEND
   # -------------------------------------------------------------------
-  - type: static
+  - type: static_site
     name: biznesash-frontend
     env: static
     rootDir: Frontend
