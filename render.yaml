@@ -181,6 +181,5 @@ services:
     rootDir: Frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    plan: free
     # Note: VITE_API_BASE_URL needs to be set manually in Render UI after deployment
     # to point to your api-gateway URL (e.g., https://api-gateway-xyz.onrender.com)
