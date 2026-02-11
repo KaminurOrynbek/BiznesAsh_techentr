@@ -139,11 +139,11 @@ services:
     startCommand: ./main
     plan: free
 
-  # -------------------------------------------------------------------
-  # FRONTEND
-  # -------------------------------------------------------------------
-  - type: static_site
-    name: biznesash-frontend
+# -------------------------------------------------------------------
+# FRONTEND (Static Sites need a separate top-level key)
+# -------------------------------------------------------------------
+staticSites:
+  - name: biznesash-frontend
     env: static
     rootDir: Frontend
     buildCommand: npm install && npm run build
