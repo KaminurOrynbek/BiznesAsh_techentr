@@ -1,15 +1,16 @@
 services:
   # -------------------------------------------------------------------
-  # INFRASTRUCTURE
+  # INFRASTRUCTURE (as web services for FREE tier compatibility)
   # -------------------------------------------------------------------
   - type: web
     name: biznesash-redis
     env: docker
-    dockerContext: .
-    dockerCommand: "redis-server --allow-empty-password yes"
     image: bitnami/redis:latest
     plan: free
-    region: oregon # adjust to your preferred region
+    region: oregon
+    envVars:
+      - key: ALLOW_EMPTY_PASSWORD
+        value: "yes"
 
   - type: web
     name: biznesash-nats
@@ -19,7 +20,7 @@ services:
     region: oregon
 
   # -------------------------------------------------------------------
-  # MICROSERVICES (Go)
+  # MICROSERVICES (Go - as web services with health checks)
   # -------------------------------------------------------------------
   - type: web
     name: api-gateway
@@ -66,7 +67,6 @@ services:
           name: biznesash-nats
           type: web
           property: hostport
-      # Add DB vars here after creating managed Postgres manually or via blueprint if supported
 
   - type: web
     name: content-service
@@ -111,7 +111,7 @@ services:
       - key: SMTP_USERNAME
         value: kaminurorinbek@gmail.com
       - key: SMTP_PASSWORD
-        sync: false # User needs to provide this in Render UI
+        sync: false
       - key: SERVICE_EMAIL
         value: kaminurorinbek@gmail.com
 
@@ -140,9 +140,9 @@ services:
     plan: free
 
 # -------------------------------------------------------------------
-# FRONTEND (Static Sites need a separate top-level key)
+# FRONTEND
 # -------------------------------------------------------------------
-staticSites:
+static_sites:
   - name: biznesash-frontend
     env: static
     rootDir: Frontend
