@@ -26,5 +26,5 @@ require (
 
 replace (
 	github.com/KaminurOrynbek/BiznesAsh => ../
-	github.com/KaminurOrynbek/BiznesAsh_lib => ../../BiznesAsh_lib
+	github.com/KaminurOrynbek/BiznesAsh_lib => ../lib/BiznesAsh_lib
 )

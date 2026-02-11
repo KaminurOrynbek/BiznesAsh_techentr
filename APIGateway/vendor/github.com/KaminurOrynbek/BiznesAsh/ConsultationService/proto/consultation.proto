@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package consultation;
+
+option go_package = "github.com/KaminurOrynbek/BiznesAsh/ConsultationService/proto";
+
+service ConsultationService {
+    rpc RegisterExpert(ExpertData) returns (ExpertProfile);
+    rpc ListAvailableExperts(Filter) returns (ExpertList);
+    rpc CreateBooking(BookingData) returns (BookingResponse);
+    rpc CancelBooking(CancelBookingRequest) returns (BookingResponse);
+    rpc GetUserBookings(GetUserBookingsRequest) returns (BookingList);
+    rpc ConfirmBookingPayment(ConfirmPaymentRequest) returns (Empty);
+}
+
+message CancelBookingRequest {
+    string booking_id = 1;
+}
+
+message GetUserBookingsRequest {
+    string user_id = 1;
+}
+
+message BookingList {
+    repeated BookingDetail bookings = 1;
+}
+
+message BookingDetail {
+    string id = 1;
+    string user_id = 2;
+    string expert_id = 3;
+    string status = 4;
+    string scheduled_at = 5;
+    string meeting_link = 6;
+    string created_at = 7;
+    string expert_name = 8;
+}
+
+message Empty {}
+
+message ExpertData {
+    string user_id = 1;
+    string specialization = 2;
+    double price_per_session = 3;
+}
+
+message ExpertProfile {
+    string id = 1;
+    string user_id = 2;
+    string specialization = 3;
+    double price_per_session = 4;
+    bool is_available = 5;
+}
+
+message ExpertList {
+    repeated ExpertProfile experts = 1;
+}
+
+message Filter {
+    string specialization = 1;
+}
+
+message BookingData {
+    string user_id = 1;
+    string expert_id = 2;
+    string scheduled_at = 3;
+    string expert_name = 4;
+}
+
+message BookingResponse {
+    string id = 1;
+    string status = 2;
+    string meeting_link = 3;
+}
+
+message ConfirmPaymentRequest {
+    string booking_id = 1;
+}

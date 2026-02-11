@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "github.com/KaminurOrynbek/BiznesAsh/PaymentService/proto";
+
+service PaymentService {
+    rpc ProcessPayment(ProcessPaymentRequest) returns (PaymentResponse);
+    rpc GetTransactionHistory(GetHistoryRequest) returns (HistoryResponse);
+}
+
+message ProcessPaymentRequest {
+    string user_id = 1;
+    double amount = 2;
+    string currency = 3;
+    string reference_type = 4; // SUBSCRIPTION, CONSULTATION
+    string reference_id = 5;
+}
+
+message PaymentResponse {
+    string id = 1;
+    string status = 2; // SUCCESS, FAILED, PENDING
+    string created_at = 3;
+}
+
+message GetHistoryRequest {
+    string user_id = 1;
+}
+
+message HistoryResponse {
+    repeated PaymentResponse transactions = 1;
+}

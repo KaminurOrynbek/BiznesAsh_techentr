@@ -20,7 +20,7 @@ replace github.com/KaminurOrynbek/BiznesAsh/PaymentService => ../PaymentService
 
 replace github.com/KaminurOrynbek/BiznesAsh/ConsultationService => ../ConsultationService
 
-replace github.com/KaminurOrynbek/BiznesAsh_lib => ../../BiznesAsh_lib
+replace github.com/KaminurOrynbek/BiznesAsh_lib => ../lib/BiznesAsh_lib
 
 require (
 	github.com/KaminurOrynbek/BiznesAsh v0.0.0

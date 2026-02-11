@@ -1,0 +1,6 @@
+[submodule "lib/BiznesAsh_lib_new"]
+	path = lib/BiznesAsh_lib_new
+	url = https://github.com/KaminurOrynbek/BiznesAsh_lib.git
+[submodule "lib/BiznesAsh_lib"]
+	path = lib/BiznesAsh_lib
+	url = https://github.com/KaminurOrynbek/BiznesAsh_lib.git
