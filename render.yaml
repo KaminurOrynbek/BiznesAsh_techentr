@@ -5,7 +5,8 @@ services:
   - type: web
     name: biznesash-redis
     env: docker
-    image: bitnami/redis:latest
+    dockerfilePath: ./Dockerfile.redis
+    dockerContext: .
     plan: free
     region: oregon
     envVars:
@@ -15,7 +16,8 @@ services:
   - type: web
     name: biznesash-nats
     env: docker
-    image: nats:latest
+    dockerfilePath: ./Dockerfile.nats
+    dockerContext: .
     plan: free
     region: oregon
 
