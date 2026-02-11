@@ -1,15 +1,19 @@
 import apiClient from "./api";
 
-export interface Post {
+export interface PollOption {
   id: string;
-  authorId: string;
-  content: string;
-  likesCount: number;
-  commentsCount: number;
-  createdAt: string;
-  updatedAt: string;
-  liked: boolean;
-  authorUsername?: string;
+  text: string;
+  votesCount: number;
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
+  expiresAt: string;
+  totalVotes: number;
+  userVotedOptionId?: string;
+  expired?: boolean;
 }
 
 export interface Comment {
@@ -24,10 +28,30 @@ export interface Comment {
   authorUsername?: string;
 }
 
-// ... (CreatePostRequest... constants ... normalizeDate ... normalizePost ...)
+export interface Post {
+  id: string;
+  authorId: string;
+  content: string;
+  likesCount: number;
+  commentsCount: number;
+  createdAt: string;
+  updatedAt: string;
+  liked: boolean;
+  authorUsername?: string;
+  images?: string[];
+  files?: string[];
+  poll?: Poll;
+}
 
 export interface CreatePostRequest {
   content: string;
+  images?: string[];
+  files?: string[];
+  poll?: {
+    question: string;
+    options: string[];
+    durationHours: number;
+  };
 }
 
 export interface CreateCommentRequest {
@@ -89,6 +113,9 @@ function normalizePost(raw: unknown): Post {
     createdAt,
     updatedAt,
     liked,
+    images: Array.isArray(p.images) ? p.images : undefined,
+    files: Array.isArray(p.files) ? p.files : undefined,
+    poll: p.poll ? (p.poll as Poll) : undefined,
     ...(authorUsername ? { authorUsername } : {}),
   };
 }
@@ -208,5 +235,10 @@ export const contentService = {
   unlikeComment: async (commentId: string): Promise<number> => {
     const response = await apiClient.delete<{ likesCount: number }>(`${CONTENT_PREFIX}/comments/${commentId}/like`);
     return response.data.likesCount;
+  },
+
+  votePoll: async (postId: string, optionId: string): Promise<Poll> => {
+    const response = await apiClient.post<Poll>(`${CONTENT_PREFIX}/posts/${postId}/poll/vote`, { optionId });
+    return response.data;
   },
 };

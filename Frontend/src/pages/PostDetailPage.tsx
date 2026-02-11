@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Navbar, Card, Loading, Alert, Button, TextArea } from "../components";
 import type { Post, Comment } from "../services/contentService";
 import { contentService } from "../services/contentService";
-import { Trash2, MessageSquare, ThumbsUp } from "lucide-react";
+import { Trash2, MessageSquare, ThumbsUp, FileText, Share2, BarChart3, Image } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 
 export const PostDetailPage = () => {
@@ -18,6 +18,17 @@ export const PostDetailPage = () => {
   const [error, setError] = useState("");
   const [newCommentContent, setNewCommentContent] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
+
+  const handleVote = async (postId: string, optionId: string) => {
+    try {
+      const updatedPoll = await contentService.votePoll(postId, optionId);
+      if (post && post.id === postId) {
+        setPost({ ...post, poll: updatedPoll });
+      }
+    } catch {
+      setError("Failed to vote");
+    }
+  };
 
 
   const fetchPostData = useCallback(async () => {
@@ -169,6 +180,95 @@ export const PostDetailPage = () => {
               </div>
 
               <p className="text-gray-800 mb-4 whitespace-pre-wrap text-lg leading-relaxed">{post.content}</p>
+
+              {/* Render Images */}
+              {post.images && post.images.length > 0 && (
+                <div className={`mb-6 grid gap-2 rounded-2xl overflow-hidden ${post.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {post.images.map((img, i) => (
+                    <div key={i} className="aspect-video bg-slate-100/50">
+                      <img
+                        src={img}
+                        alt=""
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Render Files */}
+              {post.files && post.files.length > 0 && (
+                <div className="mb-6 space-y-2">
+                  {post.files.map((file, i) => (
+                    <a
+                      key={i}
+                      href={file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 transition-colors group"
+                    >
+                      <FileText className="h-6 w-6 text-blue-500" />
+                      <div>
+                        <span className="text-sm font-semibold block">{t('attachment')} {i + 1}</span>
+                        <span className="text-xs text-slate-500">{t('clickToDownload')}</span>
+                      </div>
+                      <Share2 className="h-4 w-4 ml-auto text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {/* Render Poll */}
+              {post.poll && (
+                <div className="mb-6 p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                  <div className="flex items-center gap-2 text-slate-500 mb-1">
+                    <BarChart3 className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">{t('pollLabel')}</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-900 leading-tight">{post.poll.question}</h4>
+                  <div className="space-y-3">
+                    {post.poll.options.map((opt) => {
+                      const percentage = post.poll?.totalVotes ? Math.round((opt.votesCount / post.poll.totalVotes) * 100) : 0;
+                      const hasVoted = post.poll?.userVotedOptionId;
+                      const isMyVote = post.poll?.userVotedOptionId === opt.id;
+
+                      return (
+                        <button
+                          key={opt.id}
+                          onClick={() => !hasVoted && handleVote(post.id, opt.id)}
+                          disabled={!!hasVoted}
+                          className={`relative w-full p-4 text-left rounded-xl text-base font-semibold transition-all overflow-hidden border ${hasVoted ? 'cursor-default border-transparent' : 'hover:border-blue-500 border-slate-200 bg-white'}`}
+                        >
+                          {hasVoted && (
+                            <div
+                              className={`absolute inset-0 bg-blue-500/10 transition-all`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          )}
+                          <div className="relative flex justify-between items-center z-10">
+                            <span className="flex items-center gap-3">
+                              {opt.text}
+                              {isMyVote && <div className="h-2 w-2 rounded-full bg-blue-500 ring-4 ring-blue-500/20" />}
+                            </span>
+                            {hasVoted && <span className="text-sm text-slate-500 font-bold">{percentage}%</span>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium pt-2 border-t border-slate-200/60">
+                    <span>{post.poll.totalVotes} {t('totalVotes')}</span>
+                    <span className="flex items-center gap-1">
+                      {new Date(post.poll.expiresAt) > new Date() ? (
+                        <>
+                          <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                          {t('ongoing')}
+                        </>
+                      ) : t('pollClosed')}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-4 border-t border-slate-100 pt-4">
                 <div className="relative">

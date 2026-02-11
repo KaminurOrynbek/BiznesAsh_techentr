@@ -12,4 +12,5 @@ type PostUsecase interface {
 	GetPost(ctx context.Context, id string, currentUserID string) (*entity.Post, error)
 	ListPosts(ctx context.Context, offset, limit int, currentUserID string) ([]*entity.Post, error)
 	SearchPosts(ctx context.Context, keyword string, offset, limit int, currentUserID string) ([]*entity.Post, error)
+	VotePoll(ctx context.Context, postID, optionID, userID string) error
 }

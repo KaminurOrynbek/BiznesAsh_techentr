@@ -33,6 +33,7 @@ const (
 	ContentService_UnlikePost_FullMethodName    = "/content.ContentService/UnlikePost"
 	ContentService_LikeComment_FullMethodName   = "/content.ContentService/LikeComment"
 	ContentService_UnlikeComment_FullMethodName = "/content.ContentService/UnlikeComment"
+	ContentService_VotePoll_FullMethodName      = "/content.ContentService/VotePoll"
 )
 
 // ContentServiceClient is the client API for ContentService service.
@@ -53,6 +54,7 @@ type ContentServiceClient interface {
 	UnlikePost(ctx context.Context, in *UnlikePostRequest, opts ...grpc.CallOption) (*UnlikePostResponse, error)
 	LikeComment(ctx context.Context, in *LikeCommentRequest, opts ...grpc.CallOption) (*LikeCommentResponse, error)
 	UnlikeComment(ctx context.Context, in *UnlikeCommentRequest, opts ...grpc.CallOption) (*UnlikeCommentResponse, error)
+	VotePoll(ctx context.Context, in *VotePollRequest, opts ...grpc.CallOption) (*VotePollResponse, error)
 }
 
 type contentServiceClient struct {
@@ -203,6 +205,16 @@ func (c *contentServiceClient) UnlikeComment(ctx context.Context, in *UnlikeComm
 	return out, nil
 }
 
+func (c *contentServiceClient) VotePoll(ctx context.Context, in *VotePollRequest, opts ...grpc.CallOption) (*VotePollResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VotePollResponse)
+	err := c.cc.Invoke(ctx, ContentService_VotePoll_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContentServiceServer is the server API for ContentService service.
 // All implementations must embed UnimplementedContentServiceServer
 // for forward compatibility.
@@ -221,6 +233,7 @@ type ContentServiceServer interface {
 	UnlikePost(context.Context, *UnlikePostRequest) (*UnlikePostResponse, error)
 	LikeComment(context.Context, *LikeCommentRequest) (*LikeCommentResponse, error)
 	UnlikeComment(context.Context, *UnlikeCommentRequest) (*UnlikeCommentResponse, error)
+	VotePoll(context.Context, *VotePollRequest) (*VotePollResponse, error)
 	mustEmbedUnimplementedContentServiceServer()
 }
 
@@ -272,6 +285,9 @@ func (UnimplementedContentServiceServer) LikeComment(context.Context, *LikeComme
 }
 func (UnimplementedContentServiceServer) UnlikeComment(context.Context, *UnlikeCommentRequest) (*UnlikeCommentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UnlikeComment not implemented")
+}
+func (UnimplementedContentServiceServer) VotePoll(context.Context, *VotePollRequest) (*VotePollResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method VotePoll not implemented")
 }
 func (UnimplementedContentServiceServer) mustEmbedUnimplementedContentServiceServer() {}
 func (UnimplementedContentServiceServer) testEmbeddedByValue()                        {}
@@ -546,6 +562,24 @@ func _ContentService_UnlikeComment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContentService_VotePoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VotePollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContentServiceServer).VotePoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ContentService_VotePoll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContentServiceServer).VotePoll(ctx, req.(*VotePollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContentService_ServiceDesc is the grpc.ServiceDesc for ContentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -608,6 +642,10 @@ var ContentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnlikeComment",
 			Handler:    _ContentService_UnlikeComment_Handler,
+		},
+		{
+			MethodName: "VotePoll",
+			Handler:    _ContentService_VotePoll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

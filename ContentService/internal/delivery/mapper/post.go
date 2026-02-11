@@ -27,5 +27,37 @@ func ConvertPostToPB(p *entity.Post) *pb.Post {
 		CommentsCount: p.CommentsCount,
 		Comments:      pbComments,
 		Liked:         p.Liked,
+		Images:        p.Images,
+		Files:         p.Files,
+		Poll:          ConvertPollToPB(p.Poll),
+	}
+}
+
+func ConvertPollToPB(p *entity.Poll) *pb.Poll {
+	if p == nil {
+		return nil
+	}
+	options := make([]*pb.PollOption, 0, len(p.Options))
+	for _, opt := range p.Options {
+		options = append(options, ConvertPollOptionToPB(opt))
+	}
+	return &pb.Poll{
+		Id:                p.ID,
+		Question:          p.Question,
+		Options:           options,
+		ExpiresAt:         p.ExpiresAt.Format(time.RFC3339),
+		TotalVotes:        p.TotalVotes,
+		UserVotedOptionId: p.UserVotedOptionID,
+	}
+}
+
+func ConvertPollOptionToPB(o *entity.PollOption) *pb.PollOption {
+	if o == nil {
+		return nil
+	}
+	return &pb.PollOption{
+		Id:         o.ID,
+		Text:       o.Text,
+		VotesCount: o.VotesCount,
 	}
 }

@@ -46,11 +46,41 @@ func (h *ContentHandler) CreatePost(ctx context.Context, req *pb.CreatePostReque
 		Published: req.Published,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		Images:    req.Images,
+		Files:     req.Files,
 	}
+
+	if req.Poll != nil {
+		pollOptions := make([]*entity.PollOption, 0, len(req.Poll.Options))
+		for _, opt := range req.Poll.Options {
+			pollOptions = append(pollOptions, &entity.PollOption{
+				Text: opt,
+			})
+		}
+		post.Poll = &entity.Poll{
+			Question:  req.Poll.Question,
+			Options:   pollOptions,
+			ExpiresAt: time.Now().Add(time.Duration(req.Poll.DurationHours) * time.Hour),
+		}
+	}
+
 	if err := h.postUsecase.CreatePost(ctx, post); err != nil {
 		return nil, err
 	}
 	return &pb.PostResponse{Post: mapper.ConvertPostToPB(post)}, nil
+}
+
+func (h *ContentHandler) VotePoll(ctx context.Context, req *pb.VotePollRequest) (*pb.VotePollResponse, error) {
+	if err := h.postUsecase.VotePoll(ctx, req.PostId, req.OptionId, req.UserId); err != nil {
+		return nil, err
+	}
+
+	post, err := h.postUsecase.GetPost(ctx, req.PostId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.VotePollResponse{Poll: mapper.ConvertPollToPB(post.Poll)}, nil
 }
 
 func (h *ContentHandler) UpdatePost(ctx context.Context, req *pb.UpdatePostRequest) (*pb.PostResponse, error) {

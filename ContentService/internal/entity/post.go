@@ -19,4 +19,22 @@ type Post struct {
 	CommentsCount int32
 	Comments      []*Comment
 	Liked         bool
+	Images        []string
+	Files         []string
+	Poll          *Poll
+}
+
+type Poll struct {
+	ID                string
+	Question          string
+	Options           []*PollOption
+	ExpiresAt         time.Time
+	TotalVotes        int32
+	UserVotedOptionID string
+}
+
+type PollOption struct {
+	ID         string
+	Text       string
+	VotesCount int32
 }

@@ -57,6 +57,9 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 				"createdAt":      p.GetCreatedAt(),
 				"updatedAt":      p.GetUpdatedAt(),
 				"liked":          p.GetLiked(),
+				"images":         p.GetImages(),
+				"files":          p.GetFiles(),
+				"poll":           p.GetPoll(),
 			})
 		}
 		c.JSON(http.StatusOK, enriched)
@@ -85,6 +88,9 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 			"createdAt":      p.GetCreatedAt(),
 			"updatedAt":      p.GetUpdatedAt(),
 			"liked":          p.GetLiked(),
+			"images":         p.GetImages(),
+			"files":          p.GetFiles(),
+			"poll":           p.GetPoll(),
 		})
 	})
 
@@ -100,6 +106,9 @@ func RegisterContentRoutes(r *gin.Engine, contentClient contentpb.ContentService
 	content.POST("/posts/:id/comments", createCommentHandler(contentClient, userClient))
 	content.GET("/posts/:id/comments", listCommentsHandler(contentClient, userClient))
 	content.DELETE("/comments/:id", deleteCommentHandler(contentClient, userClient))
+
+	// Poll routes
+	content.POST("/posts/:id/poll/vote", votePollHandler(contentClient, userClient))
 
 	// Post Management
 	content.DELETE("/posts/:id", deletePostHandler(contentClient, userClient))
@@ -153,6 +162,9 @@ func createPostHandler(client contentpb.ContentServiceClient, userClient userpb.
 			"authorId":       p.GetAuthorId(),
 			"authorUsername": u.GetUsername(),
 			"createdAt":      p.GetCreatedAt(),
+			"images":         p.GetImages(),
+			"files":          p.GetFiles(),
+			"poll":           p.GetPoll(),
 		})
 	}
 }
@@ -396,5 +408,35 @@ func unlikeCommentHandler(contentClient contentpb.ContentServiceClient, userClie
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"likesCount": resp.GetLikesCount()})
+	}
+}
+func votePollHandler(contentClient contentpb.ContentServiceClient, userClient userpb.UserServiceClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postID := c.Param("id")
+		var body struct {
+			OptionId string `json:"optionId"`
+		}
+		if err := c.BindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		userID := getCurrentUserID(c, userClient)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
+			return
+		}
+
+		resp, err := contentClient.VotePoll(context.Background(), &contentpb.VotePollRequest{
+			PostId:   postID,
+			OptionId: body.OptionId,
+			UserId:   userID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp.GetPoll())
 	}
 }

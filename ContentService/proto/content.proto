@@ -25,6 +25,8 @@ service ContentService {
   rpc LikeComment(LikeCommentRequest) returns (LikeCommentResponse);
   rpc UnlikeComment(UnlikeCommentRequest) returns (UnlikeCommentResponse);
 
+  rpc VotePoll(VotePollRequest) returns (VotePollResponse);
+
   // Deprecated/Removed:
   // rpc ReactToPost(ReactToPostRequest) returns (ReactToPostResponse);
   // rpc RemovePostReaction(RemovePostReactionRequest) returns (RemovePostReactionResponse);
@@ -51,6 +53,41 @@ message Post {
   int32 comments_count = 11;
   repeated Comment comments = 12;
   bool liked = 13;
+  repeated string images = 14;
+  Poll poll = 15;
+  repeated string files = 16;
+}
+
+message Poll {
+  string id = 1;
+  string question = 2;
+  repeated PollOption options = 3;
+  bool expired = 4;
+  int32 total_votes = 5;
+  string expires_at = 6;
+  string user_voted_option_id = 7;
+}
+
+message PollOption {
+  string id = 1;
+  string text = 2;
+  int32 votes_count = 3;
+}
+
+message PollCreate {
+  string question = 1;
+  repeated string options = 2;
+  int32 duration_hours = 3;
+}
+
+message VotePollRequest {
+  string post_id = 1;
+  string option_id = 2;
+  string user_id = 3;
+}
+
+message VotePollResponse {
+  Poll poll = 1;
 }
 
 message Comment {
@@ -71,6 +108,9 @@ message CreatePostRequest {
   PostType type = 4;
   string author_id = 5;
   bool published = 6;
+  repeated string images = 7;
+  PollCreate poll = 8;
+  repeated string files = 9;
 }
 
 message UpdatePostRequest {

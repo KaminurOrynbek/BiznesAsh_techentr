@@ -42,7 +42,7 @@ func (u *commentUsecaseImpl) CreateComment(ctx context.Context, comment *entity.
 	}
 
 	// Find post owner
-	post, err := u.postRepo.GetByID(ctx, comment.PostID)
+	post, err := u.postRepo.GetByID(ctx, comment.PostID, "")
 	if err == nil {
 		_ = u.contentPublisher.PublishCommentCreated(payloads.CommentCreated{
 			CommentID:    comment.ID,

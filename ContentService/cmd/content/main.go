@@ -27,6 +27,7 @@ import (
 
 	pb "github.com/KaminurOrynbek/BiznesAsh/auto-proto/content"
 	handler "github.com/KaminurOrynbek/BiznesAsh/internal/delivery/grpc"
+	"github.com/KaminurOrynbek/BiznesAsh/internal/migration"
 )
 
 func init() {
@@ -40,9 +41,13 @@ func init() {
 }
 
 func main() {
-	// 2. Init postgres
-	// Загружаем конфигурацию
+	// 1. Load config
 	pgConfig := postgres.LoadPostgresConfig()
+
+	// 2. Run migrations
+	migration.RunMigrations(pgConfig.DSN())
+
+	// 3. Init postgres
 	// Создаём подключение к БД
 	db, err := sqlx.Connect("postgres", pgConfig.DSN())
 	if err != nil {
@@ -71,8 +76,6 @@ func main() {
 	if err := db.Get(&regclass, "select to_regclass('public.posts')"); err != nil {
 		log.Fatalf("failed to read to_regclass: %v", err)
 	}
-	log.Printf("Connected DB: %s | search_path: %s | public.posts: %v\n", dbName, searchPath, regclass)
-
 	// 3. Init Redis
 	redisConfig := rediscfg.LoadRedisConfig()
 
@@ -86,9 +89,10 @@ func main() {
 	postDAO := dao.NewPostDAO(db)
 	commentDAO := dao.NewCommentDAO(db)
 	likeDAO := dao.NewLikeDao(db)
+	pollDAO := dao.NewPollDAO(db)
 
 	// 5. Init Repositories
-	postRepo := repoimpl.NewPostRepository(postDAO)
+	postRepo := repoimpl.NewPostRepository(postDAO, pollDAO)
 	commentRepo := repoimpl.NewCommentRepository(commentDAO)
 	likeRepo := repoimpl.NewLikeRepository(likeDAO)
 

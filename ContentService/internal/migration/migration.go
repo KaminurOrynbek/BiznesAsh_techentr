@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	"log"
 )
@@ -20,7 +21,7 @@ func RunMigrations(dsn string) {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migration", // path to your migration folder
+		"file://internal/migration", // path to your migration folder
 		"postgres",
 		driver,
 	)

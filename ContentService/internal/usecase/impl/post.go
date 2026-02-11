@@ -41,7 +41,7 @@ func (u *postUsecaseImpl) DeletePost(ctx context.Context, id string) error {
 }
 
 func (u *postUsecaseImpl) GetPost(ctx context.Context, id string, currentUserID string) (*entity.Post, error) {
-	post, err := u.postRepo.GetByID(ctx, id)
+	post, err := u.postRepo.GetByID(ctx, id, currentUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (u *postUsecaseImpl) GetPost(ctx context.Context, id string, currentUserID 
 }
 
 func (u *postUsecaseImpl) ListPosts(ctx context.Context, offset, limit int, currentUserID string) ([]*entity.Post, error) {
-	posts, err := u.postRepo.List(ctx, offset, limit)
+	posts, err := u.postRepo.List(ctx, offset, limit, currentUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (u *postUsecaseImpl) ListPosts(ctx context.Context, offset, limit int, curr
 }
 
 func (u *postUsecaseImpl) SearchPosts(ctx context.Context, keyword string, offset, limit int, currentUserID string) ([]*entity.Post, error) {
-	posts, err := u.postRepo.Search(ctx, keyword, offset, limit)
+	posts, err := u.postRepo.Search(ctx, keyword, offset, limit, currentUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -111,4 +111,8 @@ func (u *postUsecaseImpl) SearchPosts(ctx context.Context, keyword string, offse
 	}
 
 	return posts, nil
+}
+
+func (u *postUsecaseImpl) VotePoll(ctx context.Context, postID, optionID, userID string) error {
+	return u.postRepo.VotePoll(ctx, postID, optionID, userID)
 }

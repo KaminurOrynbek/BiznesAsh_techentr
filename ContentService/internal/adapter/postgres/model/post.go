@@ -3,22 +3,24 @@ package model
 import (
 	"github.com/KaminurOrynbek/BiznesAsh/internal/entity"
 	"github.com/KaminurOrynbek/BiznesAsh/internal/entity/enum"
-	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"time"
 )
 
 type Post struct {
-	ID            uuid.UUID     `db:"id"`
-	Title         string        `db:"title"`
-	Content       string        `db:"content"`
-	Type          enum.PostType `db:"type"`
-	AuthorID      string        `db:"author_id"`
-	CreatedAt     time.Time     `db:"created_at"`
-	UpdatedAt     time.Time     `db:"updated_at"`
-	Published     bool          `db:"published"`
-	LikesCount    int32         `db:"likes_count"`
-	DislikesCount int32         `db:"dislikes_count"`
-	CommentsCount int32         `db:"comments_count"`
+	ID            string         `db:"id"`
+	Title         string         `db:"title"`
+	Content       string         `db:"content"`
+	Type          enum.PostType  `db:"type"`
+	AuthorID      string         `db:"author_id"`
+	CreatedAt     time.Time      `db:"created_at"`
+	UpdatedAt     time.Time      `db:"updated_at"`
+	Published     bool           `db:"published"`
+	LikesCount    int32          `db:"likes_count"`
+	DislikesCount int32          `db:"dislikes_count"`
+	CommentsCount int32          `db:"comments_count"`
+	Images        pq.StringArray `db:"images"`
+	Files         pq.StringArray `db:"files"`
 	Comments      []*Comment
 }
 
@@ -33,7 +35,7 @@ func (p *Post) ToEntity() *entity.Post {
 	}
 
 	return &entity.Post{
-		ID:            p.ID.String(),
+		ID:            p.ID,
 		Title:         p.Title,
 		Content:       p.Content,
 		Type:          p.Type,
@@ -45,14 +47,14 @@ func (p *Post) ToEntity() *entity.Post {
 		DislikesCount: p.DislikesCount,
 		CommentsCount: p.CommentsCount,
 		Comments:      entityComments,
+		Images:        p.Images,
+		Files:         p.Files,
 	}
 }
 
 func FromEntityPost(p *entity.Post) *Post {
-	uid, _ := uuid.Parse(p.ID)
-
 	return &Post{
-		ID:            uid,
+		ID:            p.ID,
 		Title:         p.Title,
 		Content:       p.Content,
 		Type:          p.Type,
@@ -63,5 +65,7 @@ func FromEntityPost(p *entity.Post) *Post {
 		LikesCount:    p.LikesCount,
 		DislikesCount: p.DislikesCount,
 		CommentsCount: p.CommentsCount,
+		Images:        p.Images,
+		Files:         p.Files,
 	}
 }
