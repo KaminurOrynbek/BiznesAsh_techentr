@@ -1,6 +1,6 @@
 services:
   # -------------------------------------------------------------------
-  # INFRASTRUCTURE (as web services for FREE tier compatibility)
+  # INFRASTRUCTURE (Docker as Web for Render Free)
   # -------------------------------------------------------------------
   - type: web
     name: biznesash-redis
@@ -20,7 +20,7 @@ services:
     region: oregon
 
   # -------------------------------------------------------------------
-  # MICROSERVICES (Go - as web services with health checks)
+  # API GATEWAY
   # -------------------------------------------------------------------
   - type: web
     name: api-gateway
@@ -34,22 +34,28 @@ services:
         value: 8080
       - key: JWT_SECRET
         value: dev_biznesash_secret_2026_change_later_!@#_A1b2C3d4
+
       - key: USER_SERVICE_URL
         fromService:
           name: user-service
           type: web
           property: hostport
+
       - key: CONTENT_SERVICE_URL
         fromService:
           name: content-service
           type: web
           property: hostport
+
       - key: NOTIFICATION_SERVICE_URL
         fromService:
           name: notification-service
           type: web
           property: hostport
 
+  # -------------------------------------------------------------------
+  # USER SERVICE
+  # -------------------------------------------------------------------
   - type: web
     name: user-service
     env: go
@@ -60,14 +66,19 @@ services:
     envVars:
       - key: GRPC_PORT
         value: 50051
+
       - key: JWT_SECRET
         value: dev_biznesash_secret_2026_change_later_!@#_A1b2C3d4
+
       - key: NATS_URL
         fromService:
           name: biznesash-nats
           type: web
           property: hostport
 
+  # -------------------------------------------------------------------
+  # CONTENT SERVICE
+  # -------------------------------------------------------------------
   - type: web
     name: content-service
     env: go
@@ -78,17 +89,22 @@ services:
     envVars:
       - key: GRPC_PORT
         value: 50055
+
       - key: REDIS_ADDR
         fromService:
           name: biznesash-redis
           type: web
           property: hostport
+
       - key: NATS_URL
         fromService:
           name: biznesash-nats
           type: web
           property: hostport
 
+  # -------------------------------------------------------------------
+  # NOTIFICATION SERVICE
+  # -------------------------------------------------------------------
   - type: web
     name: notification-service
     env: go
@@ -99,22 +115,31 @@ services:
     envVars:
       - key: GRPC_PORT
         value: 50053
+
       - key: NATS_URL
         fromService:
           name: biznesash-nats
           type: web
           property: hostport
+
       - key: SMTP_HOST
         value: smtp.gmail.com
+
       - key: SMTP_PORT
         value: 587
+
       - key: SMTP_USERNAME
         value: kaminurorinbek@gmail.com
+
       - key: SMTP_PASSWORD
         sync: false
+
       - key: SERVICE_EMAIL
         value: kaminurorinbek@gmail.com
 
+  # -------------------------------------------------------------------
+  # CONSULTATION SERVICE
+  # -------------------------------------------------------------------
   - type: web
     name: consultation-service
     env: go
@@ -123,6 +148,9 @@ services:
     startCommand: ./main
     plan: free
 
+  # -------------------------------------------------------------------
+  # PAYMENT SERVICE
+  # -------------------------------------------------------------------
   - type: web
     name: payment-service
     env: go
@@ -131,6 +159,9 @@ services:
     startCommand: ./main
     plan: free
 
+  # -------------------------------------------------------------------
+  # SUBSCRIPTION SERVICE
+  # -------------------------------------------------------------------
   - type: web
     name: subscription-service
     env: go
@@ -139,15 +170,16 @@ services:
     startCommand: ./main
     plan: free
 
-# -------------------------------------------------------------------
-# FRONTEND
-# -------------------------------------------------------------------
-static_sites:
-  - name: biznesash-frontend
+  # -------------------------------------------------------------------
+  # FRONTEND (STATIC)
+  # -------------------------------------------------------------------
+  - type: web
+    name: biznesash-frontend
     env: static
     rootDir: Frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
+    plan: free
     envVars:
       - key: VITE_API_BASE_URL
         fromService:
