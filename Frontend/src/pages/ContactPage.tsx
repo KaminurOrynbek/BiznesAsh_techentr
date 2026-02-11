@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Mail, MapPin, Clock, Send, Phone, Globe, Instagram, Twitter, Linkedin } from "lucide-react";
+import { toast } from 'react-hot-toast';
+import { notificationService } from '../services/notificationService';
 import { Navbar, Card, Button, Input, TextArea, Alert } from "../components";
 
 export const ContactPage = () => {
@@ -24,16 +26,20 @@ export const ContactPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setError("");
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            console.log("Contact form submission:", formData);
-            setSuccess(true);
+            await notificationService.sendContactMessage({
+                name: formData.name,
+                email: formData.email,
+                subject: formData.subject,
+                message: formData.message
+            });
+
+            toast.success(t('messages.sendSuccess') || "Message sent successfully!");
             setFormData({ name: "", email: "", subject: "", message: "" });
-        } catch (err) {
-            setError(t('messageError'));
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            toast.error(t('messages.sendError') || "Failed to send message. Please try again later.");
         } finally {
             setIsSubmitting(false);
         }

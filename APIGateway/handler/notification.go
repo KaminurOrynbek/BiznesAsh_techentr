@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	notificationpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/notification"
@@ -33,6 +34,36 @@ func RegisterNotificationRoutes(r *gin.Engine, client notificationpb.Notificatio
 			return
 		}
 		resp, err := client.NotifySystemMessage(context.Background(), &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	})
+
+	notify.POST("/contact", func(c *gin.Context) {
+		var req struct {
+			Name    string `json:"name"`
+			Email   string `json:"email"`
+			Subject string `json:"subject"`
+			Message string `json:"message"`
+		}
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		payload, _ := json.Marshal(map[string]interface{}{
+			"type":    "CONTACT_REQUEST",
+			"name":    req.Name,
+			"email":   req.Email,
+			"subject": req.Subject,
+			"content": req.Message,
+		})
+
+		resp, err := client.NotifySystemMessage(context.Background(), &notificationpb.SystemMessageRequest{
+			Message: string(payload),
+		})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

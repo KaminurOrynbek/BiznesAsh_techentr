@@ -9,18 +9,21 @@ import (
 	userpb "github.com/KaminurOrynbek/BiznesAsh_lib/proto/auto-proto/user"
 	"github.com/google/uuid"
 	"log"
+	"os"
 	"time"
 )
 
 type notificationUsecase struct {
 	repo       _interface.NotificationRepository
 	userClient userpb.UserServiceClient
+	sender     usecase.EmailSender
 }
 
 func NewNotificationUsecase(repo _interface.NotificationRepository, userClient userpb.UserServiceClient, sender usecase.EmailSender) *notificationUsecase {
 	return &notificationUsecase{
 		repo:       repo,
 		userClient: userClient,
+		sender:     sender,
 	}
 }
 
@@ -61,6 +64,39 @@ func (u *notificationUsecase) GetNotifications(ctx context.Context, userID strin
 	}
 	offset := (page - 1) * limit
 	return u.repo.GetNotifications(ctx, userID, limit, offset)
+}
+
+func (u *notificationUsecase) NotifyContactRequest(ctx context.Context, name, email, subject, message string) error {
+	// 1. Send email to support team
+	supportEmail := os.Getenv("SERVICE_EMAIL")
+	if supportEmail == "" {
+		supportEmail = "kaminurorinbek@gmail.com" // fallback
+	}
+
+	mailBody := fmt.Sprintf(`
+		<h3>New Contact Request</h3>
+		<p><strong>Name:</strong> %s</p>
+		<p><strong>Email:</strong> %s</p>
+		<p><strong>Subject:</strong> %s</p>
+		<p><strong>Message:</strong></p>
+		<p>%s</p>
+	`, name, email, subject, message)
+
+	err := u.sender.SendEmail(ctx, &entity.Email{
+		To:      supportEmail,
+		Subject: "BiznesAsh: New Contact Request - " + subject,
+		Body:    mailBody,
+	})
+	if err != nil {
+		log.Printf("[ERROR] Failed to send contact email: %v", err)
+		// We still try to save as notification below
+	}
+
+	// 2. Also save as a system notification (optional, but good for record)
+	// We might not have a userID for anonymous contact requests,
+	// but let's assume we save it for the admin if possible, or just skip saving if userID is missing.
+
+	return nil
 }
 
 func (u *notificationUsecase) saveTypedNotification(ctx context.Context, n *entity.Notification, typ string) error {

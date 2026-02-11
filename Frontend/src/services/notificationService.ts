@@ -70,4 +70,13 @@ export const notificationService = {
   resendVerificationEmail: async (email: string): Promise<void> => {
     await apiClient.post('/auth/resend-code', { email });
   },
+
+  sendContactMessage: async (data: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<void> => {
+    await apiClient.post('/notify/contact', data);
+  },
 };

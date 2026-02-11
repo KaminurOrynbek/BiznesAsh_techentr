@@ -92,9 +92,28 @@ func (d *NotificationDelivery) NotifyPostUpdate(ctx context.Context, req *notifi
 }
 
 func (d *NotificationDelivery) NotifySystemMessage(ctx context.Context, req *notificationpb.SystemMessageRequest) (*notificationpb.NotificationResponse, error) {
+	msg := req.GetMessage()
+
+	// Check if this is a contact request JSON
+	var contactReq struct {
+		Type    string `json:"type"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Subject string `json:"subject"`
+		Content string `json:"content"`
+	}
+
+	if err := json.Unmarshal([]byte(msg), &contactReq); err == nil && contactReq.Type == "CONTACT_REQUEST" {
+		err := d.usecase.NotifyContactRequest(ctx, contactReq.Name, contactReq.Email, contactReq.Subject, contactReq.Content)
+		if err != nil {
+			return nil, err
+		}
+		return &notificationpb.NotificationResponse{Success: true, Message: "Contact Request Processed"}, nil
+	}
+
 	notification := &entity.Notification{
 		UserID:  req.GetUserId(),
-		Message: req.GetMessage(),
+		Message: msg,
 		Type:    "SYSTEM",
 	}
 	err := d.usecase.NotifySystemMessage(ctx, notification)
